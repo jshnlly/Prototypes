@@ -104,6 +104,11 @@ struct ThingsListCell: View {
                         .padding(.leading, 0.5)
                         .padding(.trailing, 0.5)
                         .frame(height: 42.5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.black.opacity(isPressed && !isLeftActive && !isRightActive ? 0.2 : 0))
+                        )
+                        .animation(.smooth())
                         
                         
                         HStack {
