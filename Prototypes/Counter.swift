@@ -30,7 +30,7 @@ struct Counter: View {
                     }
             }
             
-            // Draggable number
+            // Number display
             Text("\(count)")
                 .padding(48)
                 .font(.system(size: 120))
@@ -38,24 +38,24 @@ struct Counter: View {
                 .opacity(0.1)
                 .contentTransition(.numericText(value: Double(count)))
                 .animation(.snappy, value: count)
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            let verticalMovement = value.translation.height
-                            let difference = verticalMovement - dragOffset
-                            if abs(difference) >= 20 {
-                                count += difference > 0 ? -1 : 1
-                                haptic.impactOccurred()
-                                dragOffset = verticalMovement
-                            }
-                        }
-                        .onEnded { _ in
-                            dragOffset = 0
-                        }
-                )
         }
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    let verticalMovement = value.translation.height
+                    let difference = verticalMovement - dragOffset
+                    if abs(difference) >= 20 {
+                        count += difference > 0 ? -1 : 1
+                        haptic.impactOccurred()
+                        dragOffset = verticalMovement
+                    }
+                }
+                .onEnded { _ in
+                    dragOffset = 0
+                }
+        )
         .onAppear {
-            haptic.prepare() // Pre-prepare the haptic engine for lower latency
+            haptic.prepare()
         }
     }
 }
