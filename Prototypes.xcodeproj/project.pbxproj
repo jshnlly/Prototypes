@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		263802CF2D0002350011D3AC /* ThingsListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 263802CE2D00022F0011D3AC /* ThingsListCell.swift */; };
+		263803002D091E340011D3AC /* Counter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 263802FF2D091E340011D3AC /* Counter.swift */; };
 		26DC597A2CED725B00851CBF /* PrototypesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC59792CED725B00851CBF /* PrototypesApp.swift */; };
 		26DC597C2CED725B00851CBF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC597B2CED725B00851CBF /* ContentView.swift */; };
 		26DC597E2CED725C00851CBF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 26DC597D2CED725C00851CBF /* Assets.xcassets */; };
@@ -18,6 +19,7 @@
 
 /* Begin PBXFileReference section */
 		263802CE2D00022F0011D3AC /* ThingsListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingsListCell.swift; sourceTree = "<group>"; };
+		263802FF2D091E340011D3AC /* Counter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Counter.swift; sourceTree = "<group>"; };
 		26DC59762CED725B00851CBF /* Prototypes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Prototypes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		26DC59792CED725B00851CBF /* PrototypesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypesApp.swift; sourceTree = "<group>"; };
 		26DC597B2CED725B00851CBF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -62,6 +64,7 @@
 				26E6E7382CF8DBC90081B66E /* MeshPractice.swift */,
 				26DC59872CED727200851CBF /* IDCard.swift */,
 				263802CE2D00022F0011D3AC /* ThingsListCell.swift */,
+				263802FF2D091E340011D3AC /* Counter.swift */,
 				26DC597D2CED725C00851CBF /* Assets.xcassets */,
 				26DC597F2CED725C00851CBF /* Preview Content */,
 			);
@@ -148,6 +151,7 @@
 			files = (
 				263802CF2D0002350011D3AC /* ThingsListCell.swift in Sources */,
 				26DC597C2CED725B00851CBF /* ContentView.swift in Sources */,
+				263803002D091E340011D3AC /* Counter.swift in Sources */,
 				26E6E7392CF8DBC90081B66E /* MeshPractice.swift in Sources */,
 				26DC597A2CED725B00851CBF /* PrototypesApp.swift in Sources */,
 				26DC59882CED727200851CBF /* IDCard.swift in Sources */,
