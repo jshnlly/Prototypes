@@ -17,13 +17,13 @@ struct Counter: View {
             // Tap targets
             HStack(spacing: 0) {
                 Rectangle()
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.green)
                     .onTapGesture {
                         count -= 1
                         haptic.impactOccurred()
                     }
                 Rectangle()
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.green)
                     .onTapGesture {
                         count += 1
                         haptic.impactOccurred()
@@ -32,13 +32,14 @@ struct Counter: View {
             
             // Number display
             Text("\(count)")
+                .foregroundStyle(Color.white.opacity(1))
                 .padding(48)
                 .font(.system(size: 120))
                 .fontWeight(.bold)
-                .opacity(0.1)
                 .contentTransition(.numericText(value: Double(count)))
                 .animation(.snappy, value: count)
         }
+        .background(Color.green)
         .gesture(
             DragGesture()
                 .onChanged { value in
