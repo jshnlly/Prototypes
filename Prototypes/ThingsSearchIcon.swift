@@ -20,62 +20,71 @@ struct ThingsSearchIcon: View {
     let haptic = UIImpactFeedbackGenerator(style: .medium)
     
     var body: some View {
-        ZStack (alignment: .top) {
-            Color(uiColor: .systemBackground)
+        GeometryReader { geometry in
+            let initialOffset = -geometry.safeAreaInsets.top
+            
+            ZStack (alignment: .top) {
+                Color(uiColor: .systemBackground)
+                    .ignoresSafeArea()
 
-            Text("Pull down to search")
-                .font(.system(size: 12))
-                .foregroundStyle(Color.secondary)
-                .offset(y: 375)
-            
-            // Search panel
-            ZStack {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 24))
-                    .opacity(0.3)
-            }
-            .frame(width: 120, height: 120)
-            .background(Color(uiColor: .systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .shadow(color: Color.primary.opacity(0.1), radius: 10, x: 0, y: 0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: openSearch)
-            .opacity(openSearch ? 1 : 0)
-            .scaleEffect(openSearch ? 1 : 0.8)
-            .offset(y: openSearch ? 64 : 40)
-            .onTapGesture {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    openSearch = false
-                }
-            }
-            
-            // Main content (search icon)
-            ZStack {
-                // Single diagonal line positioned at bottom right
-                Path { path in
-                    path.move(to: CGPoint(x: 16, y: 16))
-                    path.addLine(to: CGPoint(x: 22, y: 22))
-                }
-                .trim(from: 0, to: CGFloat(handlePath))
-                .stroke(style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
-                .foregroundStyle(Color.white)
-                .frame(width: 20, height: 20)
+                Text("Pull down to search")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.secondary)
+                    .offset(y: 375)
                 
-                // Circle on top
-                Circle()
-                    .trim(from: 0, to: CGFloat(drawPath))
+                // Search panel
+                ZStack {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 24))
+                        .opacity(0.3)
+                }
+                .frame(width: 120, height: 120)
+                .background(Color(uiColor: .systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .shadow(color: Color.primary.opacity(0.1), radius: 10, x: 0, y: 0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.8), value: openSearch)
+                .opacity(openSearch ? 1 : 0)
+                .scaleEffect(openSearch ? 1 : 0.8)
+                .offset(y: openSearch ? 64 : 40)
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        openSearch = false
+                    }
+                }
+                
+                // Main content (search icon)
+                ZStack {
+                    // Single diagonal line positioned at bottom right
+                    Path { path in
+                        path.move(to: CGPoint(x: 16, y: 16))
+                        path.addLine(to: CGPoint(x: 22, y: 22))
+                    }
+                    .trim(from: 0, to: CGFloat(handlePath))
                     .stroke(style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
                     .foregroundStyle(Color.white)
                     .frame(width: 20, height: 20)
-                    .rotationEffect(.degrees(-90))
-                    .offset(x: -2, y: -2)
+                    
+                    // Circle on top
+                    Circle()
+                        .trim(from: 0, to: CGFloat(drawPath))
+                        .stroke(style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                        .foregroundStyle(Color.white)
+                        .frame(width: 20, height: 20)
+                        .rotationEffect(.degrees(-90))
+                        .offset(x: -2, y: -2)
+                }
+                .frame(width: 56, height: 56)
+                .background(pullComplete ? Color.blue : Color.secondary)
+                .clipShape(Circle())
+                .rotationEffect(Angle(degrees: rotationEffect))
+                .scaleEffect(searchIconScale)
+                .opacity(searchIconOpacity)
+                .offset(y: searchOffset == 0 ? initialOffset : CGFloat(searchOffset))
             }
-            .frame(width: 56, height: 56)
-            .background(pullComplete ? Color.blue : Color.secondary)
-            .clipShape(Circle())
-            .rotationEffect(Angle(degrees: rotationEffect))
-            .scaleEffect(searchIconScale)
-            .opacity(searchIconOpacity)
-            .offset(y: CGFloat(searchOffset))
+        }
+        .ignoresSafeArea()
+        .onAppear {
+            haptic.prepare()
         }
         .gesture(
             DragGesture()
@@ -128,9 +137,6 @@ struct ThingsSearchIcon: View {
                     }
                 }
         )
-        .onAppear {
-            haptic.prepare()
-        }
     }
 }
 
