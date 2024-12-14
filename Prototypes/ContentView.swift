@@ -68,6 +68,19 @@ struct ContentView: View {
                             }
                             .navigationBarBackButtonHidden()
                     }
+                    
+                    NavigationLink("TBD") {
+                        NUXSheet()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color(uiColor: .systemBackground))
+                            .ignoresSafeArea()
+                            .toolbar {
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                    BackButton()
+                                }
+                            }
+                            .navigationBarBackButtonHidden()
+                    }
                 }
                 .listStyle(.plain)
             }

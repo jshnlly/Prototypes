@@ -15,6 +15,7 @@
 		26DC597E2CED725C00851CBF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 26DC597D2CED725C00851CBF /* Assets.xcassets */; };
 		26DC59812CED725C00851CBF /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 26DC59802CED725C00851CBF /* Preview Assets.xcassets */; };
 		26DC59882CED727200851CBF /* IDCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC59872CED727200851CBF /* IDCard.swift */; };
+		26E074E62D0DED84000025B2 /* NUXSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E074E52D0DED84000025B2 /* NUXSheet.swift */; };
 		26E6E7392CF8DBC90081B66E /* MeshPractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E6E7382CF8DBC90081B66E /* MeshPractice.swift */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +29,7 @@
 		26DC597D2CED725C00851CBF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		26DC59802CED725C00851CBF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		26DC59872CED727200851CBF /* IDCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IDCard.swift; sourceTree = "<group>"; };
+		26E074E52D0DED84000025B2 /* NUXSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NUXSheet.swift; sourceTree = "<group>"; };
 		26E6E7382CF8DBC90081B66E /* MeshPractice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshPractice.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -67,6 +69,7 @@
 				26DC59872CED727200851CBF /* IDCard.swift */,
 				263802CE2D00022F0011D3AC /* ThingsListCell.swift */,
 				263803012D0BCF850011D3AC /* ThingsSearchIcon.swift */,
+				26E074E52D0DED84000025B2 /* NUXSheet.swift */,
 				263802FF2D091E340011D3AC /* Counter.swift */,
 				26DC597D2CED725C00851CBF /* Assets.xcassets */,
 				26DC597F2CED725C00851CBF /* Preview Content */,
@@ -157,6 +160,7 @@
 				263803002D091E340011D3AC /* Counter.swift in Sources */,
 				263803022D0BCF850011D3AC /* ThingsSearchIcon.swift in Sources */,
 				26E6E7392CF8DBC90081B66E /* MeshPractice.swift in Sources */,
+				26E074E62D0DED84000025B2 /* NUXSheet.swift in Sources */,
 				26DC597A2CED725B00851CBF /* PrototypesApp.swift in Sources */,
 				26DC59882CED727200851CBF /* IDCard.swift in Sources */,
 			);
