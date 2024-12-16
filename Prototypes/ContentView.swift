@@ -70,7 +70,7 @@ struct ContentView: View {
                     }
                     
                     NavigationLink("TBD") {
-                        NUXSheet()
+                        FamilyTray()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color(uiColor: .systemBackground))
                             .ignoresSafeArea()
