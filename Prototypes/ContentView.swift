@@ -69,7 +69,7 @@ struct ContentView: View {
                             .navigationBarBackButtonHidden()
                     }
                     
-                    NavigationLink("TBD") {
+                    NavigationLink("Family Tray") {
                         FamilyTray()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color(uiColor: .systemBackground))
