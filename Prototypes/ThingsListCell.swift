@@ -70,6 +70,7 @@ struct TodoCell: View {
 }
 
 struct ThingsListCell: View {
+    
     @State var text: String = ""
     @State var isPressed: Bool = false
     @State var dragOffset: CGSize = .zero
