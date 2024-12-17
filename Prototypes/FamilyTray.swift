@@ -31,9 +31,9 @@ struct FamilyTray: View {
             
             ZStack (alignment: .bottom) {
                 // Content Layer
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 0) {
                     HStack {
-                        Text("Tray title")
+                        Text("Dynamic tray")
                             .font(.system(size: 24, weight: .semibold, design: .rounded))
                             .foregroundStyle(Color.primary)
                         
@@ -44,29 +44,66 @@ struct FamilyTray: View {
                             .onTapGesture {
                                 haptic.impactOccurred(intensity: 0.7)
                                 withAnimation(FamilyTray.customAnimation) {
-                                    isExpanded = false
-                                    buttonWidth = 200
-                                    frameWidth = 200
-                                    frameHeight = 56
-                                    frameRadius = 28
-                                    frameShadow = 0
-                                    buttonText = "Tap to expand"
-                                    buttonOpacity = 1
+                                    
+                                    if isFullyExpanded {
+                                        
+                                        buttonWidth = UIScreen.main.bounds.width - 64
+                                        frameWidth = UIScreen.main.bounds.width - 32
+                                        frameShadow = 0.1
+                                        frameHeight = 280
+                                        frameRadius = 40
+                                        buttonOpacity = 1
+                                        buttonText = "One more time"
+                                        isFullyExpanded = false
+                                        
+                                    } else {
+                                        
+                                        isExpanded = false
+                                        buttonWidth = 200
+                                        frameWidth = 200
+                                        frameHeight = 56
+                                        frameRadius = 28
+                                        frameShadow = 0
+                                        buttonText = "Tap to expand"
+                                        buttonOpacity = 1
+                                    }
                                 }
                             }
                     }
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 16)
                     
-                    Text("This is a recreation of a tray system originally designed for Family, the Ethereum wallet")
-                        .font(.system(size: 20, design: .rounded))
-                        .foregroundStyle(Color.primary.opacity(0.6))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .offset(y: isExpanded ? 0 : 200)
-                        .scaleEffect(isExpanded ? 1 : 0)
-                    
-                    Spacer()
+                    ZStack {
+                        // First text block
+                        VStack {
+                            Text("This is a recreation of a tray system originally designed by Family, the Ethereum wallet. It's a great example of how SwiftUI can be used to create animations.")
+                                .font(.system(size: 20, design: .rounded))
+                                .foregroundStyle(Color.primary.opacity(0.5))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .opacity(isFullyExpanded ? 0 : 1)
+                        .scaleEffect(isExpanded ? 1 : 0.5)
+                        .offset(y: isExpanded ? -20 : 30)
+                        
+                        // Second text block (expanded state)
+                        VStack (spacing: 24) {
+                            Text("Step 2 jumps a bit higher than Step 1, we want to make the animation happen quickly")
+                                .font(.system(size: 20, design: .rounded))
+                                .foregroundStyle(Color.primary.opacity(0.5))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            Text("Tapping the X here will close this step, but not the entire sheet. To close the entire sheet, tap the X twice!")
+                                .font(.system(size: 20, design: .rounded))
+                                .foregroundStyle(Color.primary.opacity(0.5))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .opacity(isFullyExpanded ? 1 : 0)
+                        .scaleEffect(isFullyExpanded ? 1 : 0.5)
+                        .offset(y: isFullyExpanded ? 16 : 50)
+                    }
+                    .offset(y: isExpanded ? 0 : 100)
                 }
                 .padding(24)
+                .frame(maxHeight: .infinity, alignment: .top)
                 .opacity(isExpanded ? 1 : 0)
                 
                 // Button Layer
@@ -102,14 +139,14 @@ struct FamilyTray: View {
                                     buttonText = "One more time"
                                 } else {  // Second expansion
                                     isFullyExpanded = true
-                                    frameHeight = 540
+                                    frameHeight = 340
                                     buttonOpacity = 0.3
                                     buttonText = "Nice!"
                                 }
                             }
                         }
                 )
-                .padding(.bottom, isExpanded ? 0 : 24)
+                .padding(.bottom, isExpanded ? 0 : 32)
             }
             .frame(width: frameWidth, height: frameHeight)
             .padding(.bottom, 24)
