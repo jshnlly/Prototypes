@@ -21,6 +21,7 @@ struct FamilyTray: View {
     @State private var isFullyExpanded = false
     @State private var buttonOpacity: Double = 1.0
     let haptic = UIImpactFeedbackGenerator(style: .medium)
+    @Environment(\.colorScheme) var colorScheme
     
     
     var body: some View {
@@ -112,9 +113,9 @@ struct FamilyTray: View {
             }
             .frame(width: frameWidth, height: frameHeight)
             .padding(.bottom, 24)
-            .background(isExpanded ? Color(UIColor.systemBackground) : Color.clear)
+            .background(isExpanded ? (colorScheme == .dark ? Color(UIColor.secondarySystemBackground) : Color(UIColor.systemBackground)) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: frameRadius))
-            .shadow(color: Color.black.opacity(frameShadow), radius: 12)
+            .shadow(color: Color.secondary.opacity(0.15), radius: 12)
         }
         .padding(.bottom, 32)
         .edgesIgnoringSafeArea(.top)
