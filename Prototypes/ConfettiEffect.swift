@@ -19,8 +19,7 @@ struct ParticleEmitterView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
-        uiView.layer.sublayers?.removeAll()
-        
+        // Create new emitter
         let emitter = CAEmitterLayer()
         emitter.emitterPosition = position
         emitter.emitterShape = .point
@@ -35,29 +34,34 @@ struct ParticleEmitterView: UIViewRepresentable {
         cell.scaleRange = 0.2
         
         // Emission - quick burst
-        cell.birthRate = 30  // Fewer particles
-        cell.lifetime = 2.0  // Longer lifetime
+        cell.birthRate = 30
+        cell.lifetime = 2.0
         
         // Initial velocity - strong upward burst
         cell.velocity = 300
         cell.velocityRange = 50
-        cell.emissionRange = .pi / 6  // Even narrower angle
-        cell.emissionLongitude = -.pi / 2  // Straight up
+        cell.emissionRange = .pi / 6
+        cell.emissionLongitude = -.pi / 2
         
         // Physics
-        cell.yAcceleration = 800  // Gravity
+        cell.yAcceleration = 800
         
         // Appearance
-        cell.alphaSpeed = -0.5  // Slower fade
+        cell.alphaSpeed = -0.5
         cell.spin = 0.25
         cell.spinRange = 0.25
         
         emitter.emitterCells = [cell]
         uiView.layer.addSublayer(emitter)
         
-        // Emit for a very short time
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        // Allow a brief moment of emission before stopping
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             emitter.birthRate = 0
+            
+            // Remove the layer after particles have faded
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                emitter.removeFromSuperlayer()
+            }
         }
     }
     

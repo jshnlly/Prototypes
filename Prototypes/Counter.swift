@@ -13,25 +13,11 @@ struct Counter: View {
     @State private var particles: [(id: UUID, position: CGPoint, number: Int)] = []
     let haptic = UIImpactFeedbackGenerator(style: .light)
     
-    private func handleTap(_ increment: Bool, location: CGPoint, in geometry: GeometryProxy) {
+    private func addParticle(increment: Bool, at location: CGPoint) {
         let newCount = count + (increment ? 1 : -1)
-        
-        // Convert tap location to the correct coordinate space
-        let tapLocation = CGPoint(
-            x: location.x,
-            y: location.y + geometry.safeAreaInsets.top
-        )
-        
-        // Add new particle with the target number
         let id = UUID()
-        particles.append((id: id, position: tapLocation, number: newCount))
+        particles.append((id: id, position: location, number: newCount))
         
-        // Clean up this particle after animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            particles.removeAll { $0.id == id }
-        }
-        
-        // Update count immediately
         count = newCount
         haptic.impactOccurred()
     }
@@ -45,13 +31,14 @@ struct Counter: View {
                         .fill(Color.green)
                         .contentShape(Rectangle())
                         .onTapGesture(coordinateSpace: .global) { location in
-                            handleTap(false, location: location, in: geometry)
+                            addParticle(increment: false, at: location)
                         }
+                    
                     Rectangle()
                         .fill(Color.green)
                         .contentShape(Rectangle())
                         .onTapGesture(coordinateSpace: .global) { location in
-                            handleTap(true, location: location, in: geometry)
+                            addParticle(increment: true, at: location)
                         }
                 }
                 
@@ -63,12 +50,6 @@ struct Counter: View {
                     .fontWeight(.bold)
                     .contentTransition(.numericText(value: Double(count)))
                     .animation(.snappy, value: count)
-                
-                // Particle effects - now using the stored number
-                ForEach(particles, id: \.id) { particle in
-                    ParticleEmitterView(position: particle.position, number: particle.number)
-                        .id(particle.id)
-                }
             }
             .background(Color.green)
             .gesture(
@@ -77,7 +58,7 @@ struct Counter: View {
                         let verticalMovement = value.translation.height
                         let difference = verticalMovement - dragOffset
                         if abs(difference) >= 20 {
-                            handleTap(difference < 0, location: value.location, in: geometry)
+                            addParticle(increment: difference < 0, at: value.location)
                             dragOffset = verticalMovement
                         }
                     }
@@ -85,6 +66,14 @@ struct Counter: View {
                         dragOffset = 0
                     }
             )
+            // Add particles as an overlay
+            .overlay {
+                ForEach(particles, id: \.id) { particle in
+                    ParticleEmitterView(position: particle.position, number: particle.number)
+                        .id(particle.id)
+                        .allowsHitTesting(false)
+                }
+            }
         }
         .onAppear {
             haptic.prepare()
