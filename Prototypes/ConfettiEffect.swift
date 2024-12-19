@@ -8,95 +8,63 @@
 import SwiftUI
 import UIKit
 
-struct ParticleEmitterView: UIViewRepresentable {
+enum ParticleType {
+    case plus
+    case minus
+}
+
+struct PlusMinusParticle: View {
+    let type: ParticleType
     let position: CGPoint
-    let number: Int
+    @State private var opacity: Double = 1
+    @State private var scale: Double = 1
+    @State private var offset: CGSize = .zero
     
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        view.backgroundColor = .clear
-        return view
-    }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {
-        // Create new emitter
-        let emitter = CAEmitterLayer()
-        emitter.emitterPosition = position
-        emitter.emitterShape = .point
-        emitter.emitterSize = .zero
-        emitter.birthRate = 1.0
-        
-        let cell = CAEmitterCell()
-        
-        // Basic setup
-        cell.contents = createNumberImage()
-        cell.scale = 0.5
-        cell.scaleRange = 0.2
-        
-        // Emission - quick burst
-        cell.birthRate = 30
-        cell.lifetime = 2.0
-        
-        // Initial velocity - strong upward burst
-        cell.velocity = 300
-        cell.velocityRange = 50
-        cell.emissionRange = .pi / 6
-        cell.emissionLongitude = -.pi / 2
-        
-        // Physics
-        cell.yAcceleration = 800
-        
-        // Appearance
-        cell.alphaSpeed = -0.5
-        cell.spin = 0.25
-        cell.spinRange = 0.25
-        
-        emitter.emitterCells = [cell]
-        uiView.layer.addSublayer(emitter)
-        
-        // Allow a brief moment of emission before stopping
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            emitter.birthRate = 0
-            
-            // Remove the layer after particles have faded
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                emitter.removeFromSuperlayer()
+    var body: some View {
+        Text(type == .plus ? "+1" : "-1")
+            .font(.system(size: 60, weight: .bold))
+            .foregroundStyle(.white)
+            .position(position)
+            .opacity(opacity)
+            .scaleEffect(scale)
+            .offset(offset)
+            .onAppear {
+                withAnimation(.easeOut(duration: 1.0)) {
+                    opacity = 0
+                    scale = 1.5
+                    offset = CGSize(width: 0, height: -100)
+                }
             }
-        }
-    }
-    
-    private func createNumberImage() -> CGImage? {
-        let size = CGSize(width: 20, height: 20)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        
-        let image = renderer.image { context in
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 16, weight: .bold),
-                .foregroundColor: UIColor.white
-            ]
-            
-            let text = String(number)
-            let textSize = text.size(withAttributes: attributes)
-            let textRect = CGRect(
-                x: (size.width - textSize.width) / 2,
-                y: (size.height - textSize.height) / 2,
-                width: textSize.width,
-                height: textSize.height
-            )
-            
-            text.draw(in: textRect, withAttributes: attributes)
-        }
-        
-        return image.cgImage
     }
 }
 
-struct PopEffect: View {
-    let position: CGPoint
+struct NumberBurstParticle: View {
     let number: Int
-    let id: UUID
+    let position: CGPoint
+    @State private var opacity: Double = 1
+    @State private var scale: Double = 1
+    @State private var offset: CGSize = .zero
     
     var body: some View {
-        ParticleEmitterView(position: position, number: number)
+        Text("\(number)")
+            .font(.system(size: 40, weight: .bold))
+            .foregroundStyle(.white)
+            .position(position)
+            .opacity(opacity)
+            .scaleEffect(scale)
+            .offset(offset)
+            .onAppear {
+                let angle = Double.random(in: 0...(2 * .pi))
+                let distance = Double.random(in: 50...150)
+                
+                withAnimation(.easeOut(duration: 1.0)) {
+                    opacity = 0
+                    scale = 0.5
+                    offset = CGSize(
+                        width: cos(angle) * distance,
+                        height: sin(angle) * distance
+                    )
+                }
+            }
     }
 }
