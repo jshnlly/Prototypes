@@ -88,7 +88,9 @@ struct Counter: View {
                         let verticalMovement = value.translation.height
                         let difference = verticalMovement - dragOffset
                         if abs(difference) >= 20 {
-                            addPlusMinusParticle(increment: difference < 0, at: value.location)
+                            // Just update the count, no particles
+                            count += difference < 0 ? 1 : -1
+                            haptic.impactOccurred()
                             dragOffset = verticalMovement
                         }
                     }
