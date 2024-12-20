@@ -9,6 +9,7 @@ import SwiftUI
 
 struct Counter: View {
     @State var count: Int = 0
+    @State var hasDecimal: Bool = false  // Track decimal state
     @State private var dragOffset: CGFloat = 0
     @State private var plusMinusParticles: [(id: UUID, position: CGPoint, type: ParticleType)] = []
     @State private var numberBurst: [(id: UUID, position: CGPoint, number: Int)] = []
@@ -24,7 +25,7 @@ struct Counter: View {
         ["9", "8", "7"],
         ["6", "5", "4"],
         ["3", "2", "1"],
-        [">", "0", "."]
+        [".", "0", "⌫"]
     ]
     
     private func addPlusMinusParticle(increment: Bool, at location: CGPoint) {
@@ -41,29 +42,35 @@ struct Counter: View {
     }
     
     private func numberTapped(at location: CGPoint) {
-        // Start with scale down animation
-        withAnimation(.easeOut(duration: 0.3)) {
-            isNumberVisible = true  // Ensure visible during scale
-            isNumberPressed = true  // Use this for the scale down
+        withAnimation(.easeOut(duration: 0.2)) {
+            isNumberVisible = true
+            isNumberPressed = true
         }
         
-        // After scaling down, create particles and reset number
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             haptic.impactOccurred()
             
-            // Create particles
+            // Calculate center position relative to the counter section
+            let screenHeight = UIScreen.main.bounds.height
+            let counterSectionHeight = screenHeight * 0.4
+            let safeAreaTop = UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0
+            
+            let centerPosition = CGPoint(
+                x: UIScreen.main.bounds.width / 2,
+                y: safeAreaTop + (counterSectionHeight / 2) + 60  // Added 20pt offset to move down
+            )
+            
+            // Create particles from center
             for _ in 0..<10 {
                 let id = UUID()
-                numberBurst.append((id: id, position: location, number: count))
+                numberBurst.append((id: id, position: centerPosition, number: count))
             }
             
-            // Reset number and scale
             withAnimation(.spring) {
                 count = 0
                 isNumberPressed = false
             }
             
-            // Clean up particles
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 numberBurst.removeAll()
             }
@@ -73,41 +80,90 @@ struct Counter: View {
     private func handleNumberPadInput(_ key: String) {
         switch key {
         case "0"..."9":
-            let newValue = (count * 10) + (Int(key) ?? 0)
-            if newValue <= 99999 {
-                haptic.impactOccurred()
-                count = newValue
-            } else {
-                withAnimation(.default) {
-                    shakeAmount = 10
-                    rotationAmount = 2
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if hasDecimal {
+                // If decimal is active, only allow two digits after decimal
+                let currentCents = count % 100
+                if currentCents < 10 {
+                    let newValue = (count * 10) + (Int(key) ?? 0)
+                    if newValue <= 99999 {
+                        haptic.impactOccurred()
+                        count = newValue
+                    } else {
                         withAnimation(.default) {
-                            shakeAmount = -10
-                            rotationAmount = -2
+                            shakeAmount = 10
+                            rotationAmount = 2
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                 withAnimation(.default) {
-                                    shakeAmount = 0
-                                    rotationAmount = 0
+                                    shakeAmount = -10
+                                    rotationAmount = -2
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        withAnimation(.default) {
+                                            shakeAmount = 0
+                                            rotationAmount = 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        errorHaptic.notificationOccurred(.error)
+                    }
+                }
+            } else {
+                // Normal whole number input
+                let newValue = (count * 10) + (Int(key) ?? 0)
+                if newValue <= 99999 {
+                    haptic.impactOccurred()
+                    count = newValue
+                } else {
+                    withAnimation(.default) {
+                        shakeAmount = 10
+                        rotationAmount = 2
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation(.default) {
+                                shakeAmount = -10
+                                rotationAmount = -2
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    withAnimation(.default) {
+                                        shakeAmount = 0
+                                        rotationAmount = 0
+                                    }
                                 }
                             }
                         }
                     }
+                    errorHaptic.notificationOccurred(.error)
                 }
-                errorHaptic.notificationOccurred(.error)
             }
-        case ">":
-            // Delete last digit
+        case "⌫":
+            haptic.impactOccurred()
+            if hasDecimal && count % 100 == 0 {
+                // If at .00, remove decimal
+                hasDecimal = false
+            }
             count = count / 10
         case ".":
-            // Could handle decimal input if needed
-            break
+            haptic.impactOccurred()
+            if !hasDecimal {
+                hasDecimal = true
+                count = count * 100  // Move existing number to dollars position
+            }
         default:
             break
         }
     }
     
     private func formatNumber(_ number: Int) -> String {
+        if hasDecimal {
+            // Format as dollars and cents
+            let dollars = number / 100
+            let cents = number % 100
+            return "\(formatWholeNumber(dollars)).\(String(format: "%02d", cents))"
+        } else {
+            return formatWholeNumber(number)
+        }
+    }
+    
+    private func formatWholeNumber(_ number: Int) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = ","
@@ -196,11 +252,17 @@ struct Counter: View {
                                 Button(action: {
                                     handleNumberPadInput(key)
                                 }) {
-                                    Text(key)
-                                        .font(.system(size: 32, weight: .medium))
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 80)  // Slightly reduced height
-                                        .background(.white.opacity(0.1))
+                                    if key == "⌫" {
+                                        Image(systemName: "chevron.left")
+                                            .font(.system(size: 24, weight: .medium))
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: 80)
+                                    } else {
+                                        Text(key)
+                                            .font(.system(size: 32, weight: .medium))
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: 80)
+                                    }
                                 }
                                 .buttonStyle(NumberPadButtonStyle())
                             }
