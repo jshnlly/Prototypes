@@ -287,24 +287,25 @@ struct Counter: View {
                                 Button(action: {
                                     handleNumberPadInput(key)
                                 }) {
-                                    if key == "⌫" {
-                                        Image(systemName: "chevron.left")
-                                            .font(.system(size: 24, weight: .medium))
-                                            .frame(maxWidth: .infinity)
-                                            .frame(height: 80)
-                                            .opacity(0.5)
-                                    } else if key == "." {
-                                        Text(key)
-                                            .font(.system(size: 32, weight: .medium))
-                                            .frame(maxWidth: .infinity)
-                                            .frame(height: 80)
-                                            .opacity(0.5)
-                                    } else {
-                                        Text(key)
-                                            .font(.system(size: 32, weight: .medium))
-                                            .frame(maxWidth: .infinity)
-                                            .frame(height: 80)
+                                    // Container for the entire button area
+                                    ZStack {
+                                        // Button content
+                                        if key == "⌫" {
+                                            Image(systemName: "chevron.left")
+                                                .font(.system(size: 24, weight: .medium))
+                                                .opacity(0.5)
+                                        } else if key == "." {
+                                            Text(key)
+                                                .font(.system(size: 32, weight: .medium))
+                                                .opacity(0.5)
+                                        } else {
+                                            Text(key)
+                                                .font(.system(size: 32, weight: .medium))
+                                        }
                                     }
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 80)
+                                    .contentShape(Rectangle())  // Make entire area tappable
                                 }
                                 .buttonStyle(NumberPadButtonStyle())
                             }
@@ -336,7 +337,7 @@ struct Counter: View {
 struct NumberPadButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.875 : 1)
+            .scaleEffect(configuration.isPressed ? 1.5 : 1, anchor: .bottom)
             .animation(.spring(response: 0.3), value: configuration.isPressed)
     }
 }
