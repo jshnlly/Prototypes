@@ -17,6 +17,7 @@ struct Counter: View {
     @State private var isNumberPressed = false
     @State private var shakeAmount: CGFloat = 0
     @State private var rotationAmount: Double = 0
+    @State private var hasTriggeredHorizontalGesture = false  // Add this state
     let haptic = UIImpactFeedbackGenerator(style: .light)
     let errorHaptic = UINotificationFeedbackGenerator()
     
@@ -185,14 +186,14 @@ struct Counter: View {
                     // Tap targets
                     HStack(spacing: 0) {
                         Rectangle()
-                            .fill(Color.clear)  // Changed to clear since we have the green background
+                            .fill(Color.clear)
                             .contentShape(Rectangle())
                             .onTapGesture(coordinateSpace: .global) { location in
                                 addPlusMinusParticle(increment: false, at: location)
                             }
                         
                         Rectangle()
-                            .fill(Color.clear)  // Changed to clear
+                            .fill(Color.clear)
                             .contentShape(Rectangle())
                             .onTapGesture(coordinateSpace: .global) { location in
                                 addPlusMinusParticle(increment: true, at: location)
@@ -230,31 +231,50 @@ struct Counter: View {
                     .rotationEffect(.degrees(rotationAmount))
                     .scaleEffect(isNumberPressed ? 0.3 : 1)
                     .animation(.spring(response: 0.3), value: isNumberPressed)
-                    .gesture(
-                        DragGesture(minimumDistance: 0, coordinateSpace: .global)
-                            .onChanged { _ in
-                                isNumberPressed = true
-                            }
-                            .onEnded { value in
-                                isNumberPressed = false
-                                numberTapped(at: value.location)
-                            }
-                    )
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: UIScreen.main.bounds.height * 0.4)  // 40% of screen height
+                .frame(height: UIScreen.main.bounds.height * 0.4)
                 .gesture(
-                    DragGesture(coordinateSpace: .global)
+                    DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            let verticalMovement = value.translation.height
-                            let difference = verticalMovement - dragOffset
-                            if abs(difference) >= 20 {
-                                count += difference < 0 ? 1 : -1
-                                haptic.impactOccurred()
-                                dragOffset = verticalMovement
+                            let horizontalAmount = value.translation.width
+                            let verticalAmount = value.translation.height
+                            
+                            // Determine if this is a horizontal or vertical gesture
+                            if abs(horizontalAmount) > abs(verticalAmount) {
+                                // Horizontal gesture
+                                if abs(horizontalAmount) >= 20 && !hasTriggeredHorizontalGesture {
+                                    hasTriggeredHorizontalGesture = true  // Prevent multiple triggers
+                                    
+                                    if horizontalAmount > 0 {
+                                        // Swipe right - add decimal if not present
+                                        if !hasDecimal {
+                                            haptic.impactOccurred()
+                                            hasDecimal = true
+                                            count = count * 100
+                                        }
+                                    } else {
+                                        // Swipe left - act like backspace
+                                        haptic.impactOccurred()
+                                        handleNumberPadInput("⌫")  // Use the same handler as the backspace button
+                                    }
+                                }
+                            } else {
+                                // Vertical gesture
+                                let difference = verticalAmount - dragOffset
+                                if abs(difference) >= 20 {
+                                    count += difference < 0 ? 1 : -1
+                                    haptic.impactOccurred()
+                                    dragOffset = verticalAmount
+                                }
                             }
                         }
-                        .onEnded { _ in
+                        .onEnded { value in
+                            hasTriggeredHorizontalGesture = false  // Reset the trigger state
+                            // If it was a very short drag (tap), trigger the reset
+                            if abs(value.translation.width) < 10 && abs(value.translation.height) < 10 {
+                                numberTapped(at: value.location)
+                            }
                             dragOffset = 0
                         }
                 )
