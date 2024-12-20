@@ -90,12 +90,12 @@ struct Counter: View {
                         count = newValue
                     } else {
                         withAnimation(.default) {
-                            shakeAmount = 10
-                            rotationAmount = 2
+                            shakeAmount = 20
+                            rotationAmount = 5
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                 withAnimation(.default) {
-                                    shakeAmount = -10
-                                    rotationAmount = -2
+                                    shakeAmount = -20
+                                    rotationAmount = -5
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                         withAnimation(.default) {
                                             shakeAmount = 0
@@ -105,7 +105,7 @@ struct Counter: View {
                                 }
                             }
                         }
-                        errorHaptic.notificationOccurred(.error)
+                        errorHaptic.notificationOccurred(.warning)
                     }
                 }
             } else {
@@ -116,12 +116,12 @@ struct Counter: View {
                     count = newValue
                 } else {
                     withAnimation(.default) {
-                        shakeAmount = 10
-                        rotationAmount = 2
+                        shakeAmount = 20
+                        rotationAmount = 5
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             withAnimation(.default) {
-                                shakeAmount = -10
-                                rotationAmount = -2
+                                shakeAmount = -20
+                                rotationAmount = -5
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                     withAnimation(.default) {
                                         shakeAmount = 0
@@ -131,7 +131,7 @@ struct Counter: View {
                             }
                         }
                     }
-                    errorHaptic.notificationOccurred(.error)
+                    errorHaptic.notificationOccurred(.warning)
                 }
             }
         case "⌫":
@@ -257,6 +257,13 @@ struct Counter: View {
                                             .font(.system(size: 24, weight: .medium))
                                             .frame(maxWidth: .infinity)
                                             .frame(height: 80)
+                                            .opacity(0.5)
+                                    } else if key == "." {
+                                        Text(key)
+                                            .font(.system(size: 32, weight: .medium))
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: 80)
+                                            .opacity(0.5)
                                     } else {
                                         Text(key)
                                             .font(.system(size: 32, weight: .medium))
