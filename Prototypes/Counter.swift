@@ -57,7 +57,7 @@ struct Counter: View {
             
             let centerPosition = CGPoint(
                 x: UIScreen.main.bounds.width / 2,
-                y: safeAreaTop + (counterSectionHeight / 2) + 60  // Added 20pt offset to move down
+                y: safeAreaTop + (counterSectionHeight / 2) + 60
             )
             
             // Create particles from center
@@ -68,6 +68,7 @@ struct Counter: View {
             
             withAnimation(.spring) {
                 count = 0
+                hasDecimal = false  // Reset decimal state
                 isNumberPressed = false
             }
             
@@ -84,29 +85,11 @@ struct Counter: View {
                 // If decimal is active, only allow two digits after decimal
                 let currentCents = count % 100
                 if currentCents < 10 {
-                    let newValue = (count * 10) + (Int(key) ?? 0)
-                    if newValue <= 99999 {
-                        haptic.impactOccurred()
-                        count = newValue
-                    } else {
-                        withAnimation(.default) {
-                            shakeAmount = 20
-                            rotationAmount = 5
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                withAnimation(.default) {
-                                    shakeAmount = -20
-                                    rotationAmount = -5
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                        withAnimation(.default) {
-                                            shakeAmount = 0
-                                            rotationAmount = 0
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        errorHaptic.notificationOccurred(.warning)
-                    }
+                    // Just add the digit to cents without multiplying the whole number
+                    let dollars = count / 100
+                    let newCents = (currentCents * 10) + (Int(key) ?? 0)
+                    count = (dollars * 100) + newCents
+                    haptic.impactOccurred()
                 }
             } else {
                 // Normal whole number input
@@ -136,16 +119,27 @@ struct Counter: View {
             }
         case "⌫":
             haptic.impactOccurred()
-            if hasDecimal && count % 100 == 0 {
-                // If at .00, remove decimal
-                hasDecimal = false
+            if hasDecimal {
+                let dollars = count / 100
+                let cents = count % 100
+                
+                if cents >= 10 {
+                    // Remove rightmost digit but keep decimal position
+                    let newCents = cents / 10
+                    count = (dollars * 100) + newCents
+                } else {
+                    // If only one digit after decimal, remove decimal
+                    hasDecimal = false
+                    count = dollars
+                }
+            } else {
+                count = count / 10
             }
-            count = count / 10
         case ".":
             haptic.impactOccurred()
             if !hasDecimal {
                 hasDecimal = true
-                count = count * 100  // Move existing number to dollars position
+                count = count * 100  // Move current number to dollars position
             }
         default:
             break
@@ -157,7 +151,15 @@ struct Counter: View {
             // Format as dollars and cents
             let dollars = number / 100
             let cents = number % 100
-            return "\(formatWholeNumber(dollars)).\(String(format: "%02d", cents))"
+            
+            // Return differently formatted strings based on cents
+            if cents == 0 {
+                // Use AttributedString to make .00 more transparent
+                let dollarsStr = formatWholeNumber(dollars)
+                return dollarsStr  // We'll handle the decimal part in the view
+            } else {
+                return "\(formatWholeNumber(dollars)).\(String(format: "%02d", cents))"
+            }
         } else {
             return formatWholeNumber(number)
         }
@@ -204,13 +206,26 @@ struct Counter: View {
                             .font(.system(size: String(count).count >= 4 ? 80 : 120))
                             .fontWeight(.bold)
                         
-                        Text(formatNumber(count))
-                            .foregroundStyle(Color.white.opacity(1))
-                            .font(.system(size: String(count).count >= 4 ? 80 : 120))
-                            .fontWeight(.bold)
-                            .contentTransition(.numericText(value: Double(count)))
-                            .animation(.snappy, value: count)
+                        if hasDecimal && count % 100 == 0 {
+                            // Show faded decimal when .00
+                            Text(formatNumber(count))
+                                .foregroundStyle(Color.white.opacity(1))
+                                .font(.system(size: String(count).count >= 4 ? 80 : 120))
+                                .fontWeight(.bold) +
+                            Text(".00")
+                                .foregroundStyle(Color.white.opacity(0.2))
+                                .font(.system(size: String(count).count >= 4 ? 80 : 120))
+                                .fontWeight(.bold)
+                        } else {
+                            // Normal display
+                            Text(formatNumber(count))
+                                .foregroundStyle(Color.white.opacity(1))
+                                .font(.system(size: String(count).count >= 4 ? 80 : 120))
+                                .fontWeight(.bold)
+                        }
                     }
+                    .contentTransition(.numericText(value: Double(count)))
+                    .animation(.snappy, value: count)
                     .offset(x: shakeAmount)
                     .rotationEffect(.degrees(rotationAmount))
                     .scaleEffect(isNumberPressed ? 0.3 : 1)
