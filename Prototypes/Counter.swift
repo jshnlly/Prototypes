@@ -263,7 +263,19 @@ struct Counter: View {
                                 // Vertical gesture
                                 let difference = verticalAmount - dragOffset
                                 if abs(difference) >= 20 {
-                                    count += difference < 0 ? 1 : -1
+                                    if hasDecimal {
+                                        let dollars = count / 100
+                                        let cents = count % 100
+                                        
+                                        // Only prevent negative if dollars is 0
+                                        if dollars == 0 && difference > 0 && cents == 0 {
+                                            // Don't allow negative when at $0.00
+                                        } else {
+                                            count += difference < 0 ? 1 : -1
+                                        }
+                                    } else {
+                                        count += difference < 0 ? 1 : -1
+                                    }
                                     haptic.impactOccurred()
                                     dragOffset = verticalAmount
                                 }
