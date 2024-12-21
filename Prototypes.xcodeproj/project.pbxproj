@@ -11,6 +11,7 @@
 		263803002D091E340011D3AC /* Counter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 263802FF2D091E340011D3AC /* Counter.swift */; };
 		263803022D0BCF850011D3AC /* ThingsSearchIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 263803012D0BCF850011D3AC /* ThingsSearchIcon.swift */; };
 		2696720E2D13B2B900E6C893 /* ConfettiEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2696720D2D13B2B900E6C893 /* ConfettiEffect.swift */; };
+		269672102D1702FE00E6C893 /* ComposerSwipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2696720F2D1702FE00E6C893 /* ComposerSwipe.swift */; };
 		26DC597A2CED725B00851CBF /* PrototypesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC59792CED725B00851CBF /* PrototypesApp.swift */; };
 		26DC597C2CED725B00851CBF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC597B2CED725B00851CBF /* ContentView.swift */; };
 		26DC597E2CED725C00851CBF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 26DC597D2CED725C00851CBF /* Assets.xcassets */; };
@@ -25,6 +26,7 @@
 		263802FF2D091E340011D3AC /* Counter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Counter.swift; sourceTree = "<group>"; };
 		263803012D0BCF850011D3AC /* ThingsSearchIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingsSearchIcon.swift; sourceTree = "<group>"; };
 		2696720D2D13B2B900E6C893 /* ConfettiEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiEffect.swift; sourceTree = "<group>"; };
+		2696720F2D1702FE00E6C893 /* ComposerSwipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerSwipe.swift; sourceTree = "<group>"; };
 		26DC59762CED725B00851CBF /* Prototypes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Prototypes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		26DC59792CED725B00851CBF /* PrototypesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypesApp.swift; sourceTree = "<group>"; };
 		26DC597B2CED725B00851CBF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -73,6 +75,7 @@
 				263803012D0BCF850011D3AC /* ThingsSearchIcon.swift */,
 				26E074E52D0DED84000025B2 /* FamilyTray.swift */,
 				263802FF2D091E340011D3AC /* Counter.swift */,
+				2696720F2D1702FE00E6C893 /* ComposerSwipe.swift */,
 				2696720D2D13B2B900E6C893 /* ConfettiEffect.swift */,
 				26DC597D2CED725C00851CBF /* Assets.xcassets */,
 				26DC597F2CED725C00851CBF /* Preview Content */,
@@ -162,6 +165,7 @@
 				26DC597C2CED725B00851CBF /* ContentView.swift in Sources */,
 				263803002D091E340011D3AC /* Counter.swift in Sources */,
 				263803022D0BCF850011D3AC /* ThingsSearchIcon.swift in Sources */,
+				269672102D1702FE00E6C893 /* ComposerSwipe.swift in Sources */,
 				2696720E2D13B2B900E6C893 /* ConfettiEffect.swift in Sources */,
 				26E6E7392CF8DBC90081B66E /* MeshPractice.swift in Sources */,
 				26E074E62D0DED84000025B2 /* FamilyTray.swift in Sources */,
