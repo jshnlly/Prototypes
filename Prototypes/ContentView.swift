@@ -31,6 +31,7 @@ struct ContentView: View {
                                 }
                             }
                             .navigationBarBackButtonHidden()
+                            .enableSwipeBack()
                     }
                     NavigationLink("Things List Cell") {
                         ThingsListCell()
@@ -42,6 +43,7 @@ struct ContentView: View {
                                 }
                             }
                             .navigationBarBackButtonHidden()
+                            .enableSwipeBack()
                     }
                     NavigationLink("Counter") {
                         Counter()
@@ -54,6 +56,7 @@ struct ContentView: View {
                                 }
                             }
                             .navigationBarBackButtonHidden()
+                            .enableSwipeBack()
                     }
                     
                     NavigationLink("Things Search Icon") {
@@ -67,6 +70,7 @@ struct ContentView: View {
                                 }
                             }
                             .navigationBarBackButtonHidden()
+                            .enableSwipeBack()
                     }
                     
                     NavigationLink("Family Tray") {
@@ -80,6 +84,7 @@ struct ContentView: View {
                                 }
                             }
                             .navigationBarBackButtonHidden()
+                            .enableSwipeBack()
                     }
                     
                     NavigationLink("Composer Swipe") {
@@ -93,6 +98,7 @@ struct ContentView: View {
                                 }
                             }
                             .navigationBarBackButtonHidden()
+                            .enableSwipeBack()
                     }
                 }
                 .listStyle(.plain)
@@ -111,6 +117,28 @@ struct BackButton: View {
             Image(systemName: "chevron.left")
                 .foregroundColor(.primary)
         }
+    }
+}
+
+struct SwipeBackNavigationModifier: ViewModifier {
+    @Environment(\.dismiss) private var dismiss
+    
+    func body(content: Content) -> some View {
+        content
+            .gesture(
+                DragGesture()
+                    .onEnded { value in
+                        if value.translation.width > 100 {  // Swipe threshold
+                            dismiss()
+                        }
+                    }
+            )
+    }
+}
+
+extension View {
+    func enableSwipeBack() -> some View {
+        modifier(SwipeBackNavigationModifier())
     }
 }
 
