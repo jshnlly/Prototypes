@@ -87,8 +87,11 @@ struct ComposerSwipe: View {
                         // Determine if this is primarily a horizontal or vertical gesture
                         let isHorizontalGesture = abs(value.translation.width) > abs(value.translation.height)
                         
-                        // Only handle keyboard dismissal for vertical gestures
-                        if !isHorizontalGesture && value.translation.height > 50 && keyboardHeight > 0 {
+                        // Only handle keyboard dismissal for clear vertical gestures
+                        if !isHorizontalGesture && 
+                           value.translation.height > 100 &&  // Increased threshold
+                           abs(value.translation.width) < 50 && // Ensure it's mostly vertical
+                           keyboardHeight > 0 {
                             isFocused = false
                         }
                         
@@ -125,13 +128,18 @@ struct ComposerSwipe: View {
     private func setupKeyboardNotifications() {
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
             let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect ?? .zero
-            withAnimation(.spring()) {
+            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.25
+            let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 0
+            
+            withAnimation(.interpolatingSpring(duration: duration)) {
                 keyboardHeight = keyboardFrame.height
             }
         }
         
-        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
-            withAnimation(.spring()) {
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { notification in
+            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.25
+            
+            withAnimation(.interpolatingSpring(duration: duration)) {
                 keyboardHeight = 0
             }
         }
