@@ -213,7 +213,7 @@ struct ComposerSwipe: View {
                 }
                 .frame(height: 44)
                 .padding(.vertical)
-                .padding(.bottom, isTyping ? 12 : geometry.safeAreaInsets.bottom + 12)
+                .padding(.bottom, isTyping ? 0 : geometry.safeAreaInsets.bottom + 12)
                 .gesture(
                     DragGesture()
                         .onChanged { value in
@@ -260,7 +260,7 @@ struct ComposerSwipe: View {
             }
             .offset(y: -keyboardHeight)
         }
-        .padding(.bottom, 16)
+        .padding(.bottom, isTyping ? 4 : 16)
         .onAppear {
             setupKeyboardNotifications()
             haptic.prepare()
