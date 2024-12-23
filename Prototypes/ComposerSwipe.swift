@@ -117,14 +117,18 @@ struct ComposerSwipe: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                // Canvas area - 80% of height
-                let canvasBounds = CGRect(x: 20, y: 20, 
-                                        width: geometry.size.width - 40,
-                                        height: geometry.size.height * 0.9 - 40)
-                
-                CanvasView(model: canvasModel, bounds: canvasBounds)
-                    .frame(width: geometry.size.width - 24, height: geometry.size.height * 0.9)
-                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                // Canvas area
+                CanvasView(model: canvasModel, bounds: CGRect(
+                    x: 12,
+                    y: 12,
+                    width: geometry.size.width - 24,
+                    height: geometry.size.height * 0.7
+                ))
+                .frame(height: geometry.size.height * 0.8)
+                .background(Color.black.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 24))
+                .padding()
+                .padding(.top, 24)
                 
                 Spacer()
                 
