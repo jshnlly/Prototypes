@@ -17,11 +17,10 @@ struct TextItem: Identifiable {
 class CanvasModel: ObservableObject {
     @Published var items: [TextItem] = []
     
-    func addItem(_ text: String) {
-        // Position new items below the composer
-        let startY = UIScreen.main.bounds.height - 200 // Above the composer
-        let centerX = UIScreen.main.bounds.width/2
-        let item = TextItem(text: text, position: CGPoint(x: centerX, y: startY))
+    func addItem(_ text: String, in bounds: CGRect) {
+        let centerX = bounds.midX
+        let centerY = bounds.midY
+        let item = TextItem(text: text, position: CGPoint(x: centerX, y: centerY))
         items.append(item)
     }
 }
@@ -77,7 +76,7 @@ struct CanvasView: View {
     
     var body: some View {
         ZStack {
-            Color.black.opacity(0.1)
+            Color.black.opacity(0.05)
             
             ForEach($model.items) { $item in
                 DraggableText(item: $item, bounds: bounds)
@@ -106,7 +105,13 @@ struct ComposerSwipe: View {
     
     private func sendMessage() {
         guard hasText else { return }
-        canvasModel.addItem(text)
+        let canvasBounds = CGRect(
+            x: 16,
+            y: 16,
+            width: UIScreen.main.bounds.width - 32,
+            height: UIScreen.main.bounds.height * 0.75 - 32
+        )
+        canvasModel.addItem(text, in: canvasBounds)
         withAnimation(.spring()) {
             text = ""
             isFocused = false
@@ -117,20 +122,19 @@ struct ComposerSwipe: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
+                Spacer()
+                
                 // Canvas area
                 CanvasView(model: canvasModel, bounds: CGRect(
-                    x: 12,
-                    y: 12,
-                    width: geometry.size.width - 24,
-                    height: geometry.size.height * 0.7
+                    x: 16,
+                    y: 16,
+                    width: geometry.size.width - 32,
+                    height: geometry.size.height * 0.75 - 32
                 ))
-                .frame(height: geometry.size.height * 0.8)
-                .background(Color.black.opacity(0.1))
+                .frame(height: geometry.size.height * 0.75)
                 .clipShape(RoundedRectangle(cornerRadius: 24))
-                .padding()
-                .padding(.top, 24)
-                
-                Spacer()
+                .padding(.horizontal)
+                .padding(.top)
                 
                 // Composer area
                 ZStack(alignment: .leading) {
@@ -161,7 +165,16 @@ struct ComposerSwipe: View {
                         Image(systemName: "chevron.left")
                             .opacity(showChevron ? 1 : 0)
                             .scaleEffect(showChevron ? 1 : 0)
-                            .offset(x: 16)
+                            .offset(x: 20)
+                            .onTapGesture {
+                                haptic.impactOccurred()
+                                withAnimation(.spring()) {
+                                    emojiOpen = false
+                                    composerWidth = hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8
+                                    isSwipingHorizontally = false
+                                    showChevron = false
+                                }
+                            }
                         
                         HStack {
                             Spacer()
@@ -199,9 +212,8 @@ struct ComposerSwipe: View {
                     .position(x: composerWidth + 200, y: 22)
                 }
                 .frame(height: 44)
-                .padding(.bottom, isTyping ? 12 : 64)
-                .padding(.top, 24)
-                .offset(x: 0, y: -keyboardHeight)
+                .padding(.vertical)
+                .padding(.bottom, isTyping ? 12 : geometry.safeAreaInsets.bottom + 12)
                 .gesture(
                     DragGesture()
                         .onChanged { value in
@@ -246,7 +258,9 @@ struct ComposerSwipe: View {
                         }
                 )
             }
+            .offset(y: -keyboardHeight)
         }
+        .padding(.bottom, 16)
         .onAppear {
             setupKeyboardNotifications()
             haptic.prepare()
