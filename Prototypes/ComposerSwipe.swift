@@ -18,8 +18,10 @@ class CanvasModel: ObservableObject {
     @Published var items: [TextItem] = []
     
     func addItem(_ text: String) {
-        let centerPosition = CGPoint(x: UIScreen.main.bounds.width/2, y: UIScreen.main.bounds.height/2)
-        let item = TextItem(text: text, position: centerPosition)
+        // Position new items below the composer
+        let startY = UIScreen.main.bounds.height - 200 // Above the composer
+        let centerX = UIScreen.main.bounds.width/2
+        let item = TextItem(text: text, position: CGPoint(x: centerX, y: startY))
         items.append(item)
     }
 }
@@ -27,23 +29,43 @@ class CanvasModel: ObservableObject {
 struct DraggableText: View {
     @Binding var item: TextItem
     @GestureState private var dragState = CGSize.zero
+    let bounds: CGRect
     
     var body: some View {
         Text(item.text)
             .font(.system(size: 32, weight: .bold, design: .rounded))
             .foregroundColor(.primary)
-            .padding()
+            .padding(20)
             .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 0)
-            .position(x: item.position.x + item.offset.width + dragState.width,
-                     y: item.position.y + item.offset.height + dragState.height)
-            .gesture(
+            .position(
+                x: min(max(bounds.minX, item.position.x + item.offset.width + dragState.width), bounds.maxX),
+                y: min(max(bounds.minY, item.position.y + item.offset.height + dragState.height), bounds.maxY)
+            )
+            .highPriorityGesture(
                 DragGesture(minimumDistance: 0)
                     .updating($dragState) { value, state, _ in
                         state = value.translation
                     }
                     .onEnded { value in
+                        let newX = item.position.x + item.offset.width + value.translation.width
+                        let newY = item.position.y + item.offset.height + value.translation.height
+                        
                         item.offset.width += value.translation.width
                         item.offset.height += value.translation.height
+                        
+                        // Constrain within bounds
+                        if newX < bounds.minX {
+                            item.offset.width = bounds.minX - item.position.x
+                        }
+                        if newX > bounds.maxX {
+                            item.offset.width = bounds.maxX - item.position.x
+                        }
+                        if newY < bounds.minY {
+                            item.offset.height = bounds.minY - item.position.y
+                        }
+                        if newY > bounds.maxY {
+                            item.offset.height = bounds.maxY - item.position.y
+                        }
                     }
             )
     }
@@ -51,20 +73,17 @@ struct DraggableText: View {
 
 struct CanvasView: View {
     @ObservedObject var model: CanvasModel
+    let bounds: CGRect
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
-                ForEach($model.items) { $item in
-                    DraggableText(item: $item)
-                }
+        ZStack {
+            Color.black.opacity(0.1)
+            
+            ForEach($model.items) { $item in
+                DraggableText(item: $item, bounds: bounds)
             }
-            .frame(width: geometry.size.width, height: geometry.size.height)
         }
+        .clipShape(Rectangle())
     }
 }
 
@@ -97,138 +116,132 @@ struct ComposerSwipe: View {
     
     var body: some View {
         GeometryReader { geometry in
-            Color.clear // Background to ensure full geometry
-                .overlay {
-                    CanvasView(model: canvasModel)
-                }
-                .overlay(alignment: .bottom) {
-                    VStack(spacing: 0) {
-                        // Position everything relative to screen edges
-                        ZStack(alignment: .leading) {
-                            // Composer
-                            ZStack (alignment: .leading) {
-                                TextField("Message", text: Binding(
-                                    get: { text },
-                                    set: { newValue in
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                            text = newValue
-                                            if hasText {
-                                                composerWidth = UIScreen.main.bounds.width - 32
-                                            } else {
-                                                composerWidth = UIScreen.main.bounds.width * 0.8
-                                            }
-                                        }
-                                    }
-                                ), onEditingChanged: { editing in
-                                    withAnimation(.spring()) {
-                                        isTyping = editing
-                                    }
-                                })
-                                .focused($isFocused)
-                                .padding(.leading, 20)
-                                .disabled(emojiOpen || isSwipingHorizontally)
-                                .opacity(emojiOpen ? 0 : 1)
-                                
-                                Image(systemName: "chevron.left")
-                                    .opacity(showChevron ? 1 : 0)
-                                    .scaleEffect(showChevron ? 1 : 0)
-                                    .offset(x: 16)
-                                
-                                HStack {
-                                    Spacer()
-                                    ZStack {
-                                        Image(systemName: "arrow.up")
-                                            .foregroundStyle(Color.white)
-                                    }
-                                    .frame(width: 36, height: 36)
-                                    .background(Color.blue)
-                                    .clipShape(Circle())
-                                    .opacity(hasText && !emojiOpen ? 1 : 0)
-                                    .scaleEffect(hasText && !emojiOpen ? 1 : 0)
-                                    .onTapGesture {
-                                        sendMessage()
-                                    }
-                                }
-                                .padding(.trailing, 4)
-                            }
-                            .frame(width: composerWidth, height: 44)
-                            .background(Color.primary.opacity(0.05))
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .position(x: composerWidth/2 + 16, y: 22)  // Position from left edge
-                            .onTapGesture {
-                                if emojiOpen {
-                                    haptic.impactOccurred()
-                                    withAnimation(.spring()) {
-                                        emojiOpen = false
-                                        composerWidth = hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8
-                                        isSwipingHorizontally = false
-                                        showChevron = false
-                                    }
-                                }
-                            }
-                            
-                            // Emojis
-                            HStack(spacing: 8) {
-                                Text("✌️").font(.system(size: 32))
-                                Text("🤝").font(.system(size: 32))
-                                Text("⚡️").font(.system(size: 32))
-                                Text("👀").font(.system(size: 32))
-                                Text("😎").font(.system(size: 32))
-                                Text("🔥").font(.system(size: 32))
-                                Text("💫").font(.system(size: 32))
-                                Text("🎯").font(.system(size: 32))
-                            }
-                            .position(x: composerWidth + 200, y: 22)  // Position after composer
-                        }
-                        .frame(width: geometry.size.width, height: 44)
-                        .padding(.bottom, isTyping ? 12 : 64)
-                        .offset(x: 0, y: -keyboardHeight)
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    if abs(value.translation.width) > abs(value.translation.height) {
-                                        isSwipingHorizontally = true
-                                        
-                                        withAnimation(.interactiveSpring()) {
-                                            showChevron = false
-                                            
-                                            if emojiOpen && value.translation.width > 0 {
-                                                let dragPercentage = min(1, abs(value.translation.width) / 200)
-                                                composerWidth = 44 + ((UIScreen.main.bounds.width * 0.8 - 44) * dragPercentage)
-                                            } else if !emojiOpen && value.translation.width < 0 {
-                                                let dragPercentage = min(1, abs(value.translation.width) / 200)
-                                                let baseWidth = hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8
-                                                composerWidth = baseWidth - ((baseWidth - 44) * dragPercentage)
-                                            }
-                                        }
-                                    }
-                                }
-                                .onEnded { value in
-                                    haptic.impactOccurred()
-                                    isSwipingHorizontally = false
-                                    
-                                    if emojiOpen && value.translation.width > 50 {
-                                        withAnimation(.spring()) {
-                                            emojiOpen = false
-                                            composerWidth = hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8
-                                        }
-                                    } else if !emojiOpen && value.translation.width < -50 {
-                                        withAnimation(.spring()) {
-                                            emojiOpen = true
-                                            composerWidth = 44
-                                            showChevron = true
-                                        }
+            VStack(spacing: 0) {
+                // Canvas area - 80% of height
+                let canvasBounds = CGRect(x: 20, y: 20, 
+                                        width: geometry.size.width - 40,
+                                        height: geometry.size.height * 0.9 - 40)
+                
+                CanvasView(model: canvasModel, bounds: canvasBounds)
+                    .frame(width: geometry.size.width - 24, height: geometry.size.height * 0.9)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                
+                Spacer()
+                
+                // Composer area
+                ZStack(alignment: .leading) {
+                    // Composer
+                    ZStack (alignment: .leading) {
+                        TextField("Message", text: Binding(
+                            get: { text },
+                            set: { newValue in
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    text = newValue
+                                    if hasText {
+                                        composerWidth = UIScreen.main.bounds.width - 32
                                     } else {
-                                        withAnimation(.spring()) {
-                                            composerWidth = emojiOpen ? 44 : (hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8)
-                                            showChevron = emojiOpen
-                                        }
+                                        composerWidth = UIScreen.main.bounds.width * 0.8
                                     }
                                 }
-                        )
+                            }
+                        ), onEditingChanged: { editing in
+                            withAnimation(.spring()) {
+                                isTyping = editing
+                            }
+                        })
+                        .focused($isFocused)
+                        .padding(.leading, 20)
+                        .disabled(emojiOpen || isSwipingHorizontally)
+                        .opacity(emojiOpen ? 0 : 1)
+                        
+                        Image(systemName: "chevron.left")
+                            .opacity(showChevron ? 1 : 0)
+                            .scaleEffect(showChevron ? 1 : 0)
+                            .offset(x: 16)
+                        
+                        HStack {
+                            Spacer()
+                            ZStack {
+                                Image(systemName: "arrow.up")
+                                    .foregroundStyle(Color.white)
+                            }
+                            .frame(width: 36, height: 36)
+                            .background(Color.blue)
+                            .clipShape(Circle())
+                            .opacity(hasText && !emojiOpen ? 1 : 0)
+                            .scaleEffect(hasText && !emojiOpen ? 1 : 0)
+                            .onTapGesture {
+                                sendMessage()
+                            }
+                        }
+                        .padding(.trailing, 4)
                     }
+                    .frame(width: composerWidth, height: 44)
+                    .background(Color.primary.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .position(x: composerWidth/2 + 16, y: 22)
+                    
+                    // Emojis
+                    HStack(spacing: 8) {
+                        Text("✌️").font(.system(size: 32))
+                        Text("🤝").font(.system(size: 32))
+                        Text("⚡️").font(.system(size: 32))
+                        Text("👀").font(.system(size: 32))
+                        Text("😎").font(.system(size: 32))
+                        Text("🔥").font(.system(size: 32))
+                        Text("💫").font(.system(size: 32))
+                        Text("🎯").font(.system(size: 32))
+                    }
+                    .position(x: composerWidth + 200, y: 22)
                 }
-                .ignoresSafeArea()
+                .frame(height: 44)
+                .padding(.bottom, isTyping ? 12 : 64)
+                .padding(.top, 24)
+                .offset(x: 0, y: -keyboardHeight)
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            if abs(value.translation.width) > abs(value.translation.height) {
+                                isSwipingHorizontally = true
+                                
+                                withAnimation(.interactiveSpring()) {
+                                    showChevron = false
+                                    
+                                    if emojiOpen && value.translation.width > 0 {
+                                        let dragPercentage = min(1, abs(value.translation.width) / 200)
+                                        composerWidth = 44 + ((UIScreen.main.bounds.width * 0.8 - 44) * dragPercentage)
+                                    } else if !emojiOpen && value.translation.width < 0 {
+                                        let dragPercentage = min(1, abs(value.translation.width) / 200)
+                                        let baseWidth = hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8
+                                        composerWidth = baseWidth - ((baseWidth - 44) * dragPercentage)
+                                    }
+                                }
+                            }
+                        }
+                        .onEnded { value in
+                            haptic.impactOccurred()
+                            isSwipingHorizontally = false
+                            
+                            if emojiOpen && value.translation.width > 50 {
+                                withAnimation(.spring()) {
+                                    emojiOpen = false
+                                    composerWidth = hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8
+                                }
+                            } else if !emojiOpen && value.translation.width < -50 {
+                                withAnimation(.spring()) {
+                                    emojiOpen = true
+                                    composerWidth = 44
+                                    showChevron = true
+                                }
+                            } else {
+                                withAnimation(.spring()) {
+                                    composerWidth = emojiOpen ? 44 : (hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8)
+                                    showChevron = emojiOpen
+                                }
+                            }
+                        }
+                )
+            }
         }
         .onAppear {
             setupKeyboardNotifications()
