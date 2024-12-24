@@ -119,6 +119,17 @@ struct ComposerSwipe: View {
         haptic.impactOccurred()
     }
     
+    private func addEmojiToCanvas(_ emoji: String, geometry: GeometryProxy) {
+        let canvasBounds = CGRect(
+            x: 16,
+            y: 16,
+            width: geometry.size.width - 32,
+            height: geometry.size.height * 0.75 - 32
+        )
+        canvasModel.addItem(emoji, in: canvasBounds)
+        haptic.impactOccurred()
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
@@ -201,13 +212,37 @@ struct ComposerSwipe: View {
                     // Emojis
                     HStack(spacing: 8) {
                         Text("✌️").font(.system(size: 32))
+                            .onTapGesture {
+                                addEmojiToCanvas("✌️", geometry: geometry)
+                            }
                         Text("🤝").font(.system(size: 32))
+                            .onTapGesture {
+                                addEmojiToCanvas("🤝", geometry: geometry)
+                            }
                         Text("⚡️").font(.system(size: 32))
+                            .onTapGesture {
+                                addEmojiToCanvas("⚡️", geometry: geometry)
+                            }
                         Text("👀").font(.system(size: 32))
+                            .onTapGesture {
+                                addEmojiToCanvas("👀", geometry: geometry)
+                            }
                         Text("😎").font(.system(size: 32))
+                            .onTapGesture {
+                                addEmojiToCanvas("😎", geometry: geometry)
+                            }
                         Text("🔥").font(.system(size: 32))
+                            .onTapGesture {
+                                addEmojiToCanvas("🔥", geometry: geometry)
+                            }
                         Text("💫").font(.system(size: 32))
+                            .onTapGesture {
+                                addEmojiToCanvas("💫", geometry: geometry)
+                            }
                         Text("🎯").font(.system(size: 32))
+                            .onTapGesture {
+                                addEmojiToCanvas("🎯", geometry: geometry)
+                            }
                     }
                     .position(x: composerWidth + 200, y: 22)
                 }
