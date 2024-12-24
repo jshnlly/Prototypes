@@ -14,16 +14,40 @@ struct TextItem: Identifiable {
     var offset: CGSize = .zero
     var scale: CGFloat = 1.0
     var rotation: Angle = .zero
+    var isEmojiContainer: Bool = false
+    var lastEmojiAddedAt: Date?
 }
 
 class CanvasModel: ObservableObject {
     @Published var items: [TextItem] = []
+    private let emojiGroupTimeWindow: TimeInterval = 0.8 // seconds
     
-    func addItem(_ text: String, in bounds: CGRect) {
-        let centerX = bounds.midX
-        let centerY = bounds.midY
-        let item = TextItem(text: text, position: CGPoint(x: centerX, y: centerY))
-        items.append(item)
+    func addItem(_ text: String, in bounds: CGRect, isEmoji: Bool = false) {
+        let now = Date()
+        
+        // If it's an emoji, check if we should add to existing container
+        if isEmoji,
+           let lastIndex = items.lastIndex(where: { $0.isEmojiContainer }),
+           let lastAdded = items[lastIndex].lastEmojiAddedAt,
+           now.timeIntervalSince(lastAdded) < emojiGroupTimeWindow {
+            // Add to existing container
+            withAnimation(.spring()) {
+                items[lastIndex].text += text
+                items[lastIndex].lastEmojiAddedAt = now
+            }
+        } else {
+            // Create new item
+            let item = TextItem(
+                text: text,
+                position: CGPoint(x: bounds.midX, y: bounds.midY),
+                scale: isEmoji ? 1.5 : 1.0,
+                isEmojiContainer: isEmoji,
+                lastEmojiAddedAt: isEmoji ? now : nil
+            )
+            withAnimation(.spring()) {
+                items.append(item)
+            }
+        }
     }
 }
 
@@ -160,12 +184,7 @@ struct ComposerSwipe: View {
             width: geometry.size.width - 32,
             height: geometry.size.height * 0.75 - 32
         )
-        let item = TextItem(
-            text: emoji,
-            position: CGPoint(x: canvasBounds.midX, y: canvasBounds.midY),
-            scale: 1.5  // Make emojis a bit bigger by default
-        )
-        canvasModel.items.append(item)
+        canvasModel.addItem(emoji, in: canvasBounds, isEmoji: true)
         haptic.impactOccurred()
     }
     
@@ -228,18 +247,16 @@ struct ComposerSwipe: View {
                         
                         HStack {
                             Spacer()
-                            ZStack {
+                            Button(action: sendMessage) {
                                 Image(systemName: "arrow.up")
                                     .foregroundStyle(Color.white)
+                                    .frame(width: 36, height: 36)
+                                    .background(Color.blue)
+                                    .clipShape(Circle())
                             }
-                            .frame(width: 36, height: 36)
-                            .background(Color.blue)
-                            .clipShape(Circle())
                             .opacity(hasText && !emojiOpen ? 1 : 0)
                             .scaleEffect(hasText && !emojiOpen ? 1 : 0)
-                            .onTapGesture {
-                                sendMessage()
-                            }
+                            .buttonStyle(ScaleButtonStyle())
                         }
                         .padding(.trailing, 4)
                     }
@@ -250,38 +267,17 @@ struct ComposerSwipe: View {
                     
                     // Emojis
                     HStack(spacing: 8) {
-                        Text("✌️").font(.system(size: 32))
-                            .onTapGesture {
-                                addEmojiToCanvas("✌️", geometry: geometry)
+                        ForEach(["✌️", "🤝", "⚡️", "👀", "😎", "🔥", "💫", "🎯"], id: \.self) { emoji in
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    addEmojiToCanvas(emoji, geometry: geometry)
+                                }
+                            }) {
+                                Text(emoji)
+                                    .font(.system(size: 32))
                             }
-                        Text("🤝").font(.system(size: 32))
-                            .onTapGesture {
-                                addEmojiToCanvas("🤝", geometry: geometry)
-                            }
-                        Text("⚡️").font(.system(size: 32))
-                            .onTapGesture {
-                                addEmojiToCanvas("⚡️", geometry: geometry)
-                            }
-                        Text("👀").font(.system(size: 32))
-                            .onTapGesture {
-                                addEmojiToCanvas("👀", geometry: geometry)
-                            }
-                        Text("😎").font(.system(size: 32))
-                            .onTapGesture {
-                                addEmojiToCanvas("😎", geometry: geometry)
-                            }
-                        Text("🔥").font(.system(size: 32))
-                            .onTapGesture {
-                                addEmojiToCanvas("🔥", geometry: geometry)
-                            }
-                        Text("💫").font(.system(size: 32))
-                            .onTapGesture {
-                                addEmojiToCanvas("💫", geometry: geometry)
-                            }
-                        Text("🎯").font(.system(size: 32))
-                            .onTapGesture {
-                                addEmojiToCanvas("🎯", geometry: geometry)
-                            }
+                            .buttonStyle(ScaleButtonStyle())
+                        }
                     }
                     .position(x: composerWidth + 200, y: 22)
                 }
@@ -347,6 +343,11 @@ struct ComposerSwipe: View {
             
             withAnimation(.spring(response: 0.5, dampingFraction: 0.9)) {
                 keyboardHeight = keyboardFrame.height
+                if emojiOpen {
+                    emojiOpen = false
+                    composerWidth = hasText ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8
+                    showChevron = false
+                }
             }
         }
         
@@ -355,6 +356,14 @@ struct ComposerSwipe: View {
                 keyboardHeight = 0
             }
         }
+    }
+}
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.6 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
 
