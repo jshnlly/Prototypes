@@ -87,7 +87,7 @@ struct ContentView: View {
                             .enableSwipeBack()
                     }
                     
-                    NavigationLink("Composer Swipe") {
+                    NavigationLink("Composer Canvas") {
                         ComposerSwipe()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color(uiColor: .systemBackground))
