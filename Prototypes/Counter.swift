@@ -30,10 +30,26 @@ struct Counter: View {
         [".", "0", "⌫"]
     ]
     
+    private func calculateCenterPosition() -> CGPoint {
+        let screenHeight = UIScreen.main.bounds.height
+        let safeAreaTop = UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0
+        
+        // When number pad is visible, center in the top section
+        // When hidden, center in the whole screen
+        let centerY = showNumberPad ? 
+            safeAreaTop + (screenHeight * 0.4 / 2) :  // Center in top section
+            (screenHeight * 0.45)  // Position at about 45% from the top when no number pad
+        
+        return CGPoint(
+            x: UIScreen.main.bounds.width / 2,
+            y: centerY
+        )
+    }
+    
     private func addPlusMinusParticle(increment: Bool, at location: CGPoint) {
         let id = UUID()
         let type: ParticleType = increment ? .plus : .minus
-        plusMinusParticles.append((id: id, position: location, type: type))
+        plusMinusParticles.append((id: id, position: calculateCenterPosition(), type: type))
         
         if hasDecimal {
             // Handle decimal numbers (count represents cents * 100)
@@ -73,20 +89,10 @@ struct Counter: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             haptic.impactOccurred()
             
-            // Calculate center position relative to the counter section
-            let screenHeight = UIScreen.main.bounds.height
-            let counterSectionHeight = screenHeight * 0.4
-            let safeAreaTop = UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0
-            
-            let centerPosition = CGPoint(
-                x: UIScreen.main.bounds.width / 2,
-                y: safeAreaTop + (counterSectionHeight / 2) + 60
-            )
-            
             // Create particles from center
             for _ in 0..<10 {
                 let id = UUID()
-                numberBurst.append((id: id, position: centerPosition, number: count))
+                numberBurst.append((id: id, position: calculateCenterPosition(), number: count))
             }
             
             withAnimation(.spring) {
@@ -235,20 +241,26 @@ struct Counter: View {
                             
                             if hasDecimal && count % 100 == 0 {
                                 // Show faded decimal when .00
-                                Text(formatNumber(count))
+                                (Text(formatNumber(count))
                                     .foregroundStyle(Color.white.opacity(1))
                                     .font(.system(size: String(count).count >= 4 ? 80 : 120))
                                     .fontWeight(.bold) +
                                 Text(".00")
                                     .foregroundStyle(Color.white.opacity(0.2))
                                     .font(.system(size: String(count).count >= 4 ? 80 : 120))
-                                    .fontWeight(.bold)
+                                    .fontWeight(.bold))
+                                    .onTapGesture { location in
+                                        numberTapped(at: location)
+                                    }
                             } else {
                                 // Normal display
                                 Text(formatNumber(count))
                                     .foregroundStyle(Color.white.opacity(1))
                                     .font(.system(size: String(count).count >= 4 ? 80 : 120))
                                     .fontWeight(.bold)
+                                    .onTapGesture { location in
+                                        numberTapped(at: location)
+                                    }
                             }
                         }
                         .contentTransition(.numericText(value: Double(count)))
@@ -386,9 +398,19 @@ struct Counter: View {
                 }
                 .onEnded { value in
                     hasTriggeredHorizontalGesture = false  // Reset the trigger state
-                    // If it was a very short drag (tap), trigger the reset
+                    // If it was a very short drag (tap), handle plus/minus
                     if abs(value.translation.width) < 10 && abs(value.translation.height) < 10 {
-                        numberTapped(at: value.location)
+                        let screenWidth = UIScreen.main.bounds.width
+                        let isLeftSide = value.location.x < screenWidth / 2
+                        
+                        if isLeftSide {
+                            // Only allow negative tap if we're not at 0.00
+                            if !(hasDecimal && count == 0) {
+                                addPlusMinusParticle(increment: false, at: value.location)
+                            }
+                        } else {
+                            addPlusMinusParticle(increment: true, at: value.location)
+                        }
                     }
                     dragOffset = 0
                 }
