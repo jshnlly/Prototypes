@@ -12,6 +12,8 @@ struct TextItem: Identifiable {
     var text: String
     var position: CGPoint
     var offset: CGSize = .zero
+    var scale: CGFloat = 1.0
+    var rotation: Angle = .zero
 }
 
 class CanvasModel: ObservableObject {
@@ -28,45 +30,77 @@ class CanvasModel: ObservableObject {
 struct DraggableText: View {
     @Binding var item: TextItem
     @GestureState private var dragState = CGSize.zero
+    @GestureState private var scaleState: CGFloat = 1.0
+    @GestureState private var rotationState: Angle = .zero
     let bounds: CGRect
     
     var body: some View {
+        let dragGesture = DragGesture(minimumDistance: 0)
+            .updating($dragState) { value, state, _ in
+                state = value.translation
+            }
+            .onEnded { value in
+                let newOffsetX = value.translation.width.isFinite ? value.translation.width : 0
+                let newOffsetY = value.translation.height.isFinite ? value.translation.height : 0
+                
+                item.offset.width += newOffsetX
+                item.offset.height += newOffsetY
+                
+                // Constrain within bounds
+                let newX = item.position.x + item.offset.width
+                let newY = item.position.y + item.offset.height
+                
+                if newX < bounds.minX {
+                    item.offset.width = bounds.minX - item.position.x
+                }
+                if newX > bounds.maxX {
+                    item.offset.width = bounds.maxX - item.position.x
+                }
+                if newY < bounds.minY {
+                    item.offset.height = bounds.minY - item.position.y
+                }
+                if newY > bounds.maxY {
+                    item.offset.height = bounds.maxY - item.position.y
+                }
+            }
+        
+        let scaleGesture = MagnificationGesture()
+            .updating($scaleState) { value, state, _ in
+                state = value.isFinite ? value : 1.0
+            }
+            .onEnded { value in
+                if value.isFinite {
+                    // Limit scale between 0.5 and 3.0
+                    let newScale = min(max(item.scale * value, 0.5), 3.0)
+                    item.scale = newScale
+                }
+            }
+        
+        let rotationGesture = RotationGesture()
+            .updating($rotationState) { value, state, _ in
+                state = value
+            }
+            .onEnded { value in
+                if value.radians.isFinite {
+                    item.rotation += value
+                }
+            }
+        
+        let combinedGestures = dragGesture.simultaneously(with: scaleGesture.simultaneously(with: rotationGesture))
+        
         Text(item.text)
             .font(.system(size: 32, weight: .bold, design: .rounded))
             .foregroundColor(.primary)
-            .padding(20)
+            .padding(40)
+            .contentShape(Rectangle())
             .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 0)
+            .scaleEffect(item.scale * (scaleState.isFinite ? scaleState : 1.0))
+            .rotationEffect(item.rotation + (rotationState.radians.isFinite ? rotationState : .zero))
             .position(
                 x: min(max(bounds.minX, item.position.x + item.offset.width + dragState.width), bounds.maxX),
                 y: min(max(bounds.minY, item.position.y + item.offset.height + dragState.height), bounds.maxY)
             )
-            .highPriorityGesture(
-                DragGesture(minimumDistance: 0)
-                    .updating($dragState) { value, state, _ in
-                        state = value.translation
-                    }
-                    .onEnded { value in
-                        let newX = item.position.x + item.offset.width + value.translation.width
-                        let newY = item.position.y + item.offset.height + value.translation.height
-                        
-                        item.offset.width += value.translation.width
-                        item.offset.height += value.translation.height
-                        
-                        // Constrain within bounds
-                        if newX < bounds.minX {
-                            item.offset.width = bounds.minX - item.position.x
-                        }
-                        if newX > bounds.maxX {
-                            item.offset.width = bounds.maxX - item.position.x
-                        }
-                        if newY < bounds.minY {
-                            item.offset.height = bounds.minY - item.position.y
-                        }
-                        if newY > bounds.maxY {
-                            item.offset.height = bounds.maxY - item.position.y
-                        }
-                    }
-            )
+            .gesture(combinedGestures)
     }
 }
 
@@ -126,7 +160,12 @@ struct ComposerSwipe: View {
             width: geometry.size.width - 32,
             height: geometry.size.height * 0.75 - 32
         )
-        canvasModel.addItem(emoji, in: canvasBounds)
+        let item = TextItem(
+            text: emoji,
+            position: CGPoint(x: canvasBounds.midX, y: canvasBounds.midY),
+            scale: 1.5  // Make emojis a bit bigger by default
+        )
+        canvasModel.items.append(item)
         haptic.impactOccurred()
     }
     
@@ -169,14 +208,14 @@ struct ComposerSwipe: View {
                             }
                         })
                         .focused($isFocused)
-                        .padding(.leading, 20)
+                        .padding(.leading, 16)
                         .disabled(emojiOpen || isSwipingHorizontally)
                         .opacity(emojiOpen ? 0 : 1)
                         
                         Image(systemName: "chevron.left")
                             .opacity(showChevron ? 1 : 0)
                             .scaleEffect(showChevron ? 1 : 0)
-                            .offset(x: 20)
+                            .offset(x: 18)
                             .onTapGesture {
                                 haptic.impactOccurred()
                                 withAnimation(.spring()) {
