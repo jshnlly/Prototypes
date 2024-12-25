@@ -49,7 +49,7 @@ struct Counter: View {
     private func addPlusMinusParticle(increment: Bool, at location: CGPoint) {
         let id = UUID()
         let type: ParticleType = increment ? .plus : .minus
-        plusMinusParticles.append((id: id, position: calculateCenterPosition(), type: type))
+        plusMinusParticles.append((id: id, position: location, type: type))
         
         if hasDecimal {
             // Handle decimal numbers (count represents cents * 100)
