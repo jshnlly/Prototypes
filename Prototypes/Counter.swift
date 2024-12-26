@@ -270,7 +270,7 @@ struct Counter: View {
                         .scaleEffect(isNumberPressed ? 0.3 : 1)
                         .animation(.spring(response: 0.3), value: isNumberPressed)
                         
-                        Image(systemName: "square.grid.3x3")
+                        Image(systemName: "square.grid.3x3.fill")
                             .font(.system(size: 24))
                             .foregroundStyle(.white.opacity(0.5))
                             .offset(y: showNumberPad ? 120 : 300)
