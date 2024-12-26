@@ -16,6 +16,7 @@ struct TextItem: Identifiable {
     var rotation: Angle = .zero
     var isEmojiContainer: Bool = false
     var lastEmojiAddedAt: Date?
+    var appearanceState: Double = 0
 }
 
 class CanvasModel: ObservableObject {
@@ -40,12 +41,17 @@ class CanvasModel: ObservableObject {
             let item = TextItem(
                 text: text,
                 position: CGPoint(x: bounds.midX, y: bounds.midY),
-                scale: isEmoji ? 1.5 : 1.0,
+                scale: 0.8,
                 isEmojiContainer: isEmoji,
-                lastEmojiAddedAt: isEmoji ? now : nil
+                lastEmojiAddedAt: isEmoji ? now : nil,
+                appearanceState: 0
             )
-            withAnimation(.spring()) {
-                items.append(item)
+            items.append(item)
+            
+            // Animate in with snappier spring
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                items[items.count - 1].scale = isEmoji ? 1.5 : 1.0
+                items[items.count - 1].appearanceState = 1
             }
         }
     }
@@ -120,6 +126,7 @@ struct DraggableText: View {
             .shadow(color: .primary.opacity(0.1), radius: 2, x: 0, y: 0)
             .scaleEffect(item.scale * (scaleState.isFinite ? scaleState : 1.0))
             .rotationEffect(item.rotation + (rotationState.radians.isFinite ? rotationState : .zero))
+            .opacity(item.appearanceState)
             .position(
                 x: min(max(bounds.minX, item.position.x + item.offset.width + dragState.width), bounds.maxX),
                 y: min(max(bounds.minY, item.position.y + item.offset.height + dragState.height), bounds.maxY)
