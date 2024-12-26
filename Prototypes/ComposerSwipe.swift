@@ -117,7 +117,7 @@ struct DraggableText: View {
             .foregroundColor(.primary)
             .padding(40)
             .contentShape(Rectangle())
-            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 0)
+            .shadow(color: .primary.opacity(0.1), radius: 2, x: 0, y: 0)
             .scaleEffect(item.scale * (scaleState.isFinite ? scaleState : 1.0))
             .rotationEffect(item.rotation + (rotationState.radians.isFinite ? rotationState : .zero))
             .position(
@@ -134,7 +134,7 @@ struct CanvasView: View {
     
     var body: some View {
         ZStack {
-            Color.black.opacity(0.05)
+            Color.primary.opacity(0.05)
             
             ForEach($model.items) { $item in
                 DraggableText(item: $item, bounds: bounds)
