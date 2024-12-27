@@ -100,6 +100,20 @@ struct ContentView: View {
                             .navigationBarBackButtonHidden()
                             .enableSwipeBack()
                     }
+                    
+                    NavigationLink("Sign sheet") {
+                        SignSheet()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color(uiColor: .systemBackground))
+                            .ignoresSafeArea()
+                            .toolbar {
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                    BackButton()
+                                }
+                            }
+                            .navigationBarBackButtonHidden()
+                            .enableSwipeBack()
+                    }
                 }
                 .listStyle(.plain)
             }
