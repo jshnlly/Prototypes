@@ -16,6 +16,10 @@ struct SignButtonStyle: ButtonStyle {
 }
 
 struct SignSheet: View {
+    
+    @State var openSheet: Bool = false
+    @State var isSigned: Bool = false
+    
     let haptic = UIImpactFeedbackGenerator(style: .medium)
     
     var body: some View {
