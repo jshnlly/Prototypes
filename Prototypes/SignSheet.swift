@@ -63,6 +63,7 @@ struct SignSheet: View {
     @State var sheetHeight: CGFloat = 376
     @State private var lines: [Line] = []
     @State private var shakeAmount = 0.0
+    @State private var showingConfirmation = false
     
     private var hasSignature: Bool {
         !lines.isEmpty
@@ -147,17 +148,24 @@ struct SignSheet: View {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     if isExpanded {
                                         if hasSignature {
+                                            showingConfirmation = true
+                                            isExpanded = false  // Close sheet immediately
                                             isSigned = true
                                             lines = []
-                                            isExpanded = false
+                                            // Reset states after showing confirmation
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                                withAnimation {
+                                                    showingConfirmation = false
+                                                }
+                                            }
                                         } else {
-                                            // Trigger shake
+                                            // Shake animation code stays the same
                                             withAnimation(.interactiveSpring(response: 0.1, dampingFraction: 0.2)) {
-                                                shakeAmount = 3
+                                                shakeAmount = 1.5
                                             }
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                                 withAnimation(.interactiveSpring(response: 0.1, dampingFraction: 0.2)) {
-                                                    shakeAmount = -3
+                                                    shakeAmount = -1.5
                                                 }
                                             }
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -174,17 +182,17 @@ struct SignSheet: View {
                                 }
                             } label: {
                                 HStack {
-                                    Image(systemName: "pencil.and.outline")
+                                    Image(systemName: showingConfirmation ? "checkmark.circle.fill" : "pencil.and.outline")
                                         .foregroundStyle(Color(uiColor: .systemBackground))
-                                        .opacity(isExpanded ? 0 : 1)
-                                    Text(isExpanded ? "Confirm" : "Sign here")
+                                        .opacity(isExpanded && !showingConfirmation ? 0 : 1)
+                                    Text(showingConfirmation ? "Signed" : (isExpanded ? "Confirm" : "Sign here"))
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundStyle(Color(uiColor: .systemBackground))
                                         .offset(x: isExpanded ? -12 : 0)
                                         .animation(nil, value: isExpanded)
                                 }
                                 .frame(width: isExpanded ? UIScreen.main.bounds.width * 0.38 : UIScreen.main.bounds.width * 0.8, height: 56)
-                                .background(Color.primary)
+                                .background(Color.primary.opacity(showingConfirmation ? 0.1 : 1))
                                 .opacity(isExpanded ? (hasSignature ? 1 : 0.5) : 1)
                                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                                 .offset(x: isExpanded ? 0 : -6)
