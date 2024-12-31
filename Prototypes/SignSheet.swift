@@ -62,6 +62,7 @@ struct SignSheet: View {
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(Color(uiColor: .systemBackground))
                                 .offset(x: isExpanded ? -12 : 0)
+                                .animation(nil, value: isExpanded)
                         }
                         .frame(width: isExpanded ? UIScreen.main.bounds.width * 0.38 : UIScreen.main.bounds.width * 0.8, height: 56)
                         .background(Color.primary)
