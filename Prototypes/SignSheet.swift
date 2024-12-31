@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DrawingCanvas: View {
-    @State private var lines: [Line] = []
+    @Binding var lines: [Line]
     @State private var currentLine: Line?
     
     var body: some View {
@@ -61,6 +61,12 @@ struct SignSheet: View {
     @State var isSigned: Bool = false
     @State private var isExpanded: Bool = false
     @State var sheetHeight: CGFloat = 376
+    @State private var lines: [Line] = []
+    @State private var shakeAmount = 0.0
+    
+    private var hasSignature: Bool {
+        !lines.isEmpty
+    }
     
     let haptic = UIImpactFeedbackGenerator(style: .medium)
     
@@ -97,7 +103,7 @@ struct SignSheet: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
                                     
                                     // Drawing canvas on top (moved up in ZStack order)
-                                    DrawingCanvas()
+                                    DrawingCanvas(lines: $lines)
                                         .frame(width: UIScreen.main.bounds.width * 0.38 * 2 + 12, height: 200)
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
                                     
@@ -119,6 +125,7 @@ struct SignSheet: View {
                                 haptic.impactOccurred()
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     isExpanded = false
+                                    lines = []
                                 }
                             } label: {
                                 HStack {
@@ -138,14 +145,39 @@ struct SignSheet: View {
                             Button {
                                 haptic.impactOccurred()
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    isExpanded = true
+                                    if isExpanded {
+                                        if hasSignature {
+                                            isSigned = true
+                                            lines = []
+                                            isExpanded = false
+                                        } else {
+                                            // Trigger shake
+                                            withAnimation(.interactiveSpring(response: 0.1, dampingFraction: 0.2)) {
+                                                shakeAmount = 3
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                                withAnimation(.interactiveSpring(response: 0.1, dampingFraction: 0.2)) {
+                                                    shakeAmount = -3
+                                                }
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                withAnimation(.interactiveSpring(response: 0.1, dampingFraction: 0.2)) {
+                                                    shakeAmount = 0
+                                                }
+                                            }
+                                            haptic.impactOccurred(intensity: 0.8)
+                                        }
+                                    } else {
+                                        isExpanded = true
+                                        isSigned = false
+                                    }
                                 }
                             } label: {
                                 HStack {
                                     Image(systemName: "pencil.and.outline")
                                         .foregroundStyle(Color(uiColor: .systemBackground))
                                         .opacity(isExpanded ? 0 : 1)
-                                    Text(isExpanded && !isSigned ? "Confirm" : "Sign here")
+                                    Text(isExpanded ? "Confirm" : "Sign here")
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundStyle(Color(uiColor: .systemBackground))
                                         .offset(x: isExpanded ? -12 : 0)
@@ -153,7 +185,7 @@ struct SignSheet: View {
                                 }
                                 .frame(width: isExpanded ? UIScreen.main.bounds.width * 0.38 : UIScreen.main.bounds.width * 0.8, height: 56)
                                 .background(Color.primary)
-                                .opacity(isExpanded && !isSigned ? 0.5 : 1)
+                                .opacity(isExpanded ? (hasSignature ? 1 : 0.5) : 1)
                                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                                 .offset(x: isExpanded ? 0 : -6)
                             }
@@ -166,6 +198,7 @@ struct SignSheet: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, isExpanded ? 40 : 48)
+                .rotationEffect(.degrees(shakeAmount))
             }
         }
         .onAppear {
