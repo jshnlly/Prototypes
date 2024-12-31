@@ -10,18 +10,19 @@ import SwiftUI
 struct DrawingCanvas: View {
     @Binding var lines: [Line]
     @State private var currentLine: Line?
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         Canvas { context, size in
             for line in lines {
                 var path = Path()
                 path.addLines(line.points)
-                context.stroke(path, with: .color(.black), lineWidth: 2)
+                context.stroke(path, with: .color(colorScheme == .dark ? .white : .black), lineWidth: 2)
             }
             if let line = currentLine {
                 var path = Path()
                 path.addLines(line.points)
-                context.stroke(path, with: .color(.black), lineWidth: 2)
+                context.stroke(path, with: .color(colorScheme == .dark ? .white : .black), lineWidth: 2)
             }
         }
         .gesture(
@@ -64,6 +65,7 @@ struct SignSheet: View {
     @State private var lines: [Line] = []
     @State private var shakeAmount = 0.0
     @State private var showingConfirmation = false
+    @Environment(\.colorScheme) var colorScheme
     
     private var hasSignature: Bool {
         !lines.isEmpty
@@ -78,10 +80,10 @@ struct SignSheet: View {
                 ZStack(alignment: .bottom) {
                     // Background Layer
                     Rectangle()
-                        .fill(Color(uiColor: .systemBackground))
+                        .fill(Color(uiColor: colorScheme == .dark ? .secondarySystemBackground : .systemBackground))
                         .frame(width: isExpanded ? UIScreen.main.bounds.width - 32 : UIScreen.main.bounds.width * 0.8, height: isExpanded ? sheetHeight : 56)
                         .clipShape(RoundedRectangle(cornerRadius: isExpanded ? 32 : 20))
-                        .shadow(color: Color.black.opacity(0.1), radius: 12)
+                        .shadow(color: colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.1), radius: 12)
                     
                     // Buttons Layer
                     VStack (alignment: .center, spacing: 24) {
@@ -95,10 +97,10 @@ struct SignSheet: View {
                                 ZStack{
                                     // Background rectangle first (bottom layer)
                                     Rectangle()
-                                        .fill(Color.primary.opacity(0.05))
+                                        .fill(Color.primary.opacity(colorScheme == .dark ? 0.1 : 0.05))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
+                                                .stroke(Color.primary.opacity(colorScheme == .dark ? 0.2 : 0.1), lineWidth: 0.5)
                                         )
                                         .frame(width: UIScreen.main.bounds.width * 0.38 * 2 + 12, height: 200)
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -110,7 +112,7 @@ struct SignSheet: View {
                                     
                                     // Divider line
                                     Rectangle()
-                                        .fill(Color.primary.opacity(0.2))
+                                        .fill(Color.primary.opacity(colorScheme == .dark ? 0.3 : 0.2))
                                         .frame(width: UIScreen.main.bounds.width * 0.38 * 2 - 24, height: 1)
                                         .offset(y: 72)
                                 }
@@ -135,7 +137,7 @@ struct SignSheet: View {
                                         .foregroundStyle(Color.primary)
                                 }
                                 .frame(width: isExpanded ? UIScreen.main.bounds.width * 0.38 : 0, height: 56)
-                                .background(Color.primary.opacity(0.05))
+                                .background(Color.primary.opacity(colorScheme == .dark ? 0.1 : 0.05))
                                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                             }
                             .buttonStyle(SignButtonStyle())
@@ -192,12 +194,13 @@ struct SignSheet: View {
                                         .animation(nil, value: isExpanded)
                                 }
                                 .frame(width: isExpanded ? UIScreen.main.bounds.width * 0.38 : UIScreen.main.bounds.width * 0.8, height: 56)
-                                .background(Color.primary.opacity(showingConfirmation ? 0.1 : 1))
+                                .background(Color.primary.opacity(showingConfirmation ? (colorScheme == .dark ? 0.2 : 0.1) : 1))
                                 .opacity(isExpanded ? (hasSignature ? 1 : 0.5) : 1)
                                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                                 .offset(x: isExpanded ? 0 : -6)
                             }
                             .buttonStyle(SignButtonStyle())
+                            .disabled(showingConfirmation)
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                     }
