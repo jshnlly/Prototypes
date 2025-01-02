@@ -89,7 +89,7 @@ struct SignSheet: View {
                     VStack (alignment: .center, spacing: 24) {
                         
                         VStack(alignment: .center, spacing: 24) {
-                                Text("Sign here")
+                                Text("Delete later")
                                     .font(.system(size: 18, weight: .semibold, design: .rounded))
                                     .foregroundStyle(Color.primary.opacity(1))
                                     .frame(maxWidth: .infinity, alignment: .center)
