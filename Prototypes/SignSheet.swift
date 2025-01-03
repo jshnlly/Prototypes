@@ -61,7 +61,7 @@ struct SignSheet: View {
     @State var openSheet: Bool = false
     @State var isSigned: Bool = false
     @State private var isExpanded: Bool = false
-    @State var sheetHeight: CGFloat = 376
+    @State var sheetHeight: CGFloat = 340
     @State private var lines: [Line] = []
     @State private var shakeAmount = 0.0
     @State private var showingConfirmation = false
@@ -89,10 +89,6 @@ struct SignSheet: View {
                     VStack (alignment: .center, spacing: 24) {
                         
                         VStack(alignment: .center, spacing: 24) {
-                                Text("Delete later")
-                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(Color.primary.opacity(1))
-                                    .frame(maxWidth: .infinity, alignment: .center)
                                 
                                 ZStack{
                                     // Background rectangle first (bottom layer)
