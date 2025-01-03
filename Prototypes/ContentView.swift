@@ -114,6 +114,20 @@ struct ContentView: View {
                             .navigationBarBackButtonHidden()
                             .enableSwipeBack()
                     }
+                    
+                    NavigationLink("Map Tile") {
+                        MapTile()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color(uiColor: .systemBackground))
+                            .ignoresSafeArea()
+                            .toolbar {
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                    BackButton()
+                                }
+                            }
+                            .navigationBarBackButtonHidden()
+                            .enableSwipeBack()
+                    }
                 }
                 .listStyle(.plain)
             }

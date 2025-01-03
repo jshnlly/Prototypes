@@ -20,6 +20,7 @@
 		26DC59882CED727200851CBF /* IDCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC59872CED727200851CBF /* IDCard.swift */; };
 		26E074E62D0DED84000025B2 /* FamilyTray.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E074E52D0DED84000025B2 /* FamilyTray.swift */; };
 		26E6E7392CF8DBC90081B66E /* MeshPractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E6E7382CF8DBC90081B66E /* MeshPractice.swift */; };
+		D13DD1862D2881F3000BBDF0 /* MapTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13DD1852D2881F3000BBDF0 /* MapTile.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 		26DC59872CED727200851CBF /* IDCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IDCard.swift; sourceTree = "<group>"; };
 		26E074E52D0DED84000025B2 /* FamilyTray.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyTray.swift; sourceTree = "<group>"; };
 		26E6E7382CF8DBC90081B66E /* MeshPractice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshPractice.swift; sourceTree = "<group>"; };
+		D13DD1852D2881F3000BBDF0 /* MapTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapTile.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +73,7 @@
 			children = (
 				26DC59792CED725B00851CBF /* PrototypesApp.swift */,
 				26DC597B2CED725B00851CBF /* ContentView.swift */,
+				D13DD1852D2881F3000BBDF0 /* MapTile.swift */,
 				26E6E7382CF8DBC90081B66E /* MeshPractice.swift */,
 				26DC59872CED727200851CBF /* IDCard.swift */,
 				263802CE2D00022F0011D3AC /* ThingsListCell.swift */,
@@ -164,6 +167,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D13DD1862D2881F3000BBDF0 /* MapTile.swift in Sources */,
 				263802CF2D0002350011D3AC /* ThingsListCell.swift in Sources */,
 				26DC597C2CED725B00851CBF /* ContentView.swift in Sources */,
 				263803002D091E340011D3AC /* Counter.swift in Sources */,
