@@ -17,12 +17,24 @@ struct DrawingCanvas: View {
             for line in lines {
                 var path = Path()
                 path.addLines(line.points)
-                context.stroke(path, with: .color(colorScheme == .dark ? .white : .black), lineWidth: 2)
+                context.stroke(path, 
+                             with: .color(colorScheme == .dark ? .white : .black), 
+                             style: StrokeStyle(
+                                lineWidth: 4, 
+                                lineCap: .round, 
+                                lineJoin: .round
+                             ))
             }
             if let line = currentLine {
                 var path = Path()
                 path.addLines(line.points)
-                context.stroke(path, with: .color(colorScheme == .dark ? .white : .black), lineWidth: 2)
+                context.stroke(path, 
+                             with: .color(colorScheme == .dark ? .white : .black), 
+                             style: StrokeStyle(
+                                lineWidth: 4, 
+                                lineCap: .round, 
+                                lineJoin: .round
+                             ))
             }
         }
         .gesture(
@@ -190,7 +202,7 @@ struct SignSheet: View {
                                         .animation(nil, value: isExpanded)
                                 }
                                 .frame(width: isExpanded ? UIScreen.main.bounds.width * 0.38 : UIScreen.main.bounds.width * 0.8, height: 56)
-                                .background(Color.primary.opacity(showingConfirmation ? (colorScheme == .dark ? 0.2 : 0.1) : 1))
+                                .background(Color.primary.opacity(showingConfirmation ? (colorScheme == .dark ? 0.5 : 0.5) : 1))
                                 .opacity(isExpanded ? (hasSignature ? 1 : 0.5) : 1)
                                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                                 .offset(x: isExpanded ? 0 : -6)
