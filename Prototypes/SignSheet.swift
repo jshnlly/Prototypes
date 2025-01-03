@@ -4,6 +4,7 @@
 //
 //  Created by Josh Nelson on 12/27/24.
 //
+//  Let's add the Dynamic Toast once done
 
 import SwiftUI
 
@@ -20,8 +21,8 @@ struct DrawingCanvas: View {
                 context.stroke(path, 
                              with: .color(colorScheme == .dark ? .white : .black), 
                              style: StrokeStyle(
-                                lineWidth: 4, 
-                                lineCap: .round, 
+                                lineWidth: 6.5,
+                                lineCap: .round,
                                 lineJoin: .round
                              ))
             }
@@ -31,8 +32,8 @@ struct DrawingCanvas: View {
                 context.stroke(path, 
                              with: .color(colorScheme == .dark ? .white : .black), 
                              style: StrokeStyle(
-                                lineWidth: 4, 
-                                lineCap: .round, 
+                                lineWidth: 6.5,
+                                lineCap: .round,
                                 lineJoin: .round
                              ))
             }
@@ -73,7 +74,7 @@ struct SignSheet: View {
     @State var openSheet: Bool = false
     @State var isSigned: Bool = false
     @State private var isExpanded: Bool = false
-    @State var sheetHeight: CGFloat = 340
+    @State var sheetHeight: CGFloat = 336
     @State private var lines: [Line] = []
     @State private var shakeAmount = 0.0
     @State private var showingConfirmation = false
