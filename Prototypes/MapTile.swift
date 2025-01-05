@@ -105,51 +105,90 @@ struct MapTile: View {
     var body: some View {
         ZStack {
             Color(uiColor: .systemBackground)
-                .ignoresSafeArea()
             
-            ZStack {
-                Map(position: $position) {
-                    if let location = locationManager.userLocation {
-                        Annotation("", coordinate: location) {
-                            CustomUserAnnotation()
+            VStack {
+                ZStack {
+                    ZStack {
+                        Map(position: $position) {
+                            if let location = locationManager.userLocation {
+                                Annotation("", coordinate: location) {
+                                    CustomUserAnnotation()
+                                }
+                            }
                         }
+                        .mapStyle(.standard)
+                        .mapControls {
+                            MapUserLocationButton()
+                            MapCompass()
+                            MapScaleView()
+                        }
+                        .allowsHitTesting(false)
+                        .onChange(of: locationManager.userLocation) { oldLocation, newLocation in
+                            if let location = newLocation {
+                                position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
+                                    center: location,
+                                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                                )))
+                            }
+                        }
+                        .onAppear {
+                            if let location = locationManager.userLocation {
+                                position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
+                                    center: location,
+                                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                                )))
+                            }
+                        }
+                        .mask {
+                            Image("maskshape")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                        }
+                        
+                        Image("maskshape")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .opacity(0.01)
+                        
                     }
-                }
-                .mapStyle(.standard)
-                .mapControls {
-                    MapUserLocationButton()
-                    MapCompass()
-                    MapScaleView()
-                }
-                .allowsHitTesting(false)
-                .onChange(of: locationManager.userLocation) { oldLocation, newLocation in
-                    if let location = newLocation {
-                        position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
-                            center: location,
-                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                        )))
-                    }
-                }
-                .onAppear {
-                    if let location = locationManager.userLocation {
-                        position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
-                            center: location,
-                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                        )))
-                    }
-                }
-                .mask {
-                    Image("maskshape")
+                    
+                    Image("profilepic")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
+                    
+                    
                 }
+                .frame(width: UIScreen.main.bounds.width - 96)
                 
-                Image("maskshape")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .opacity(0.01)
+                HStack {
+                    HStack {
+                        Text("@jnelly2")
+                            .fontWeight(.semibold)
+                    }
+                    .padding(10)
+                    .background(Color.primary.opacity(0.05))
+                    .cornerRadius(100)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .foregroundStyle(Color.blue)
+                        Text("Ann Arbor")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.primary.opacity(1))
+                    }
+                    .padding(10)
+                    .background(Color.primary.opacity(0.05))
+                    .cornerRadius(100)
+                    
+                    HStack {
+                        Image(systemName: "qrcode")
+                    }
+                    .padding(10)
+                    .background(Color.primary.opacity(0.05))
+                    .cornerRadius(100)
+                }
+                .padding(.bottom, 48)
             }
-            .frame(width: UIScreen.main.bounds.width - 96)
         }
     }
 }
