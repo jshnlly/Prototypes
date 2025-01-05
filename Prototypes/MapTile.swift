@@ -101,94 +101,111 @@ struct CustomUserAnnotation: View {
 struct MapTile: View {
     @StateObject private var locationManager = LocationManager()
     @State private var position: MapCameraPosition = .automatic
+    @State private var flip = false
+    @State private var rotationAngle = 0.0
     
     var body: some View {
         ZStack {
             Color(uiColor: .systemBackground)
+                .ignoresSafeArea()
             
-            VStack {
+            // Content container
+            ZStack {
+                // Profile side
+                Image("profilepic")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .opacity(rotationAngle < 90 ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.2), value: rotationAngle)
+                
+                // Map side
                 ZStack {
-                    ZStack {
-                        Map(position: $position) {
-                            if let location = locationManager.userLocation {
-                                Annotation("", coordinate: location) {
-                                    CustomUserAnnotation()
-                                }
+                    Map(position: $position) {
+                        if let location = locationManager.userLocation {
+                            Annotation("", coordinate: location) {
+                                CustomUserAnnotation()
                             }
                         }
-                        .mapStyle(.standard)
-                        .mapControls {
-                            MapUserLocationButton()
-                            MapCompass()
-                            MapScaleView()
+                    }
+                    .mapStyle(.standard)
+                    .mapControls {
+                        MapUserLocationButton()
+                        MapCompass()
+                        MapScaleView()
+                    }
+                    .allowsHitTesting(false)
+                    .onChange(of: locationManager.userLocation) { oldLocation, newLocation in
+                        if let location = newLocation {
+                            position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
+                                center: location,
+                                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                            )))
                         }
-                        .allowsHitTesting(false)
-                        .onChange(of: locationManager.userLocation) { oldLocation, newLocation in
-                            if let location = newLocation {
-                                position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
-                                    center: location,
-                                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                                )))
-                            }
+                    }
+                    .onAppear {
+                        if let location = locationManager.userLocation {
+                            position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
+                                center: location,
+                                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                            )))
                         }
-                        .onAppear {
-                            if let location = locationManager.userLocation {
-                                position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
-                                    center: location,
-                                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                                )))
-                            }
-                        }
-                        .mask {
-                            Image("maskshape")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                        }
-                        
+                    }
+                    .mask {
                         Image("maskshape")
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .opacity(0.01)
-                        
                     }
                     
-                    Image("profilepic")
+                    Image("maskshape")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                    
-                    
+                        .opacity(0.01)
                 }
-                .frame(width: UIScreen.main.bounds.width - 96)
+                .opacity(rotationAngle >= 90 ? 1 : 0)
+                .animation(.easeInOut(duration: 0.2), value: rotationAngle)
+            }
+            .frame(width: UIScreen.main.bounds.width - 96)
+            .frame(height: UIScreen.main.bounds.width - 96)
+            .rotation3DEffect(
+                .degrees(rotationAngle),
+                axis: (x: 0, y: 1, z: 0)
+            )
+            
+            // Bottom pills in fixed position
+            HStack {
+                HStack {
+                    Text("@jnelly2")
+                        .fontWeight(.semibold)
+                }
+                .padding(10)
+                .background(Color.primary.opacity(0.05))
+                .cornerRadius(100)
+                
+                HStack(spacing: 4) {
+                    Image(systemName: "location.fill")
+                        .foregroundStyle(Color.blue)
+                    Text("Ann Arbor")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color.primary.opacity(1))
+                }
+                .padding(10)
+                .background(Color.primary.opacity(0.05))
+                .cornerRadius(100)
+                .onTapGesture {
+                    withAnimation(.spring(duration: 0.5)) {
+                        rotationAngle = flip ? 0 : 180
+                        flip.toggle()
+                    }
+                }
                 
                 HStack {
-                    HStack {
-                        Text("@jnelly2")
-                            .fontWeight(.semibold)
-                    }
-                    .padding(10)
-                    .background(Color.primary.opacity(0.05))
-                    .cornerRadius(100)
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "location.fill")
-                            .foregroundStyle(Color.blue)
-                        Text("Ann Arbor")
-                            .fontWeight(.semibold)
-                            .foregroundStyle(Color.primary.opacity(1))
-                    }
-                    .padding(10)
-                    .background(Color.primary.opacity(0.05))
-                    .cornerRadius(100)
-                    
-                    HStack {
-                        Image(systemName: "qrcode")
-                    }
-                    .padding(10)
-                    .background(Color.primary.opacity(0.05))
-                    .cornerRadius(100)
+                    Image(systemName: "qrcode")
                 }
-                .padding(.bottom, 48)
+                .padding(10)
+                .background(Color.primary.opacity(0.05))
+                .cornerRadius(100)
             }
+            .offset(y: 300)
         }
     }
 }
