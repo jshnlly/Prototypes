@@ -9,6 +9,12 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
+extension CLLocationCoordinate2D: Equatable {
+    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+        lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
+}
+
 struct MapRegion: Equatable {
     var center: CLLocationCoordinate2D
     var span: MKCoordinateSpan
@@ -22,25 +28,37 @@ struct MapRegion: Equatable {
 }
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
+    let manager = CLLocationManager()
     @Published var region = MapRegion(
-        center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),  // Default to San Francisco
+        center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
     )
+    @Published var userLocation: CLLocationCoordinate2D?
     
     override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        manager.requestWhenInUseAuthorization()
+        manager.distanceFilter = kCLDistanceFilterNone
+        manager.activityType = .other
+        manager.allowsBackgroundLocationUpdates = false
+        manager.pausesLocationUpdatesAutomatically = false
+        manager.headingOrientation = .portrait
+        
+        if manager.authorizationStatus == .notDetermined {
+            manager.requestWhenInUseAuthorization()
+        } else if manager.authorizationStatus == .authorizedWhenInUse {
+            manager.startUpdatingLocation()
+            manager.startUpdatingHeading()
+        }
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
             manager.startUpdatingLocation()
+            manager.startUpdatingHeading()
         case .denied, .restricted:
-            // Handle denied access
             break
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
@@ -49,15 +67,34 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location manager failed with error: \(error.localizedDescription)")
+    }
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
         
-        withAnimation {
-            region = MapRegion(
+        DispatchQueue.main.async {
+            self.userLocation = location.coordinate
+            self.region = MapRegion(
                 center: location.coordinate,
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
         }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        objectWillChange.send()
+    }
+}
+
+struct CustomUserAnnotation: View {
+    var body: some View {
+        Image("pin")
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(width: 44, height: 44)
+            .scaleEffect(3)
     }
 }
 
@@ -66,37 +103,53 @@ struct MapTile: View {
     @State private var position: MapCameraPosition = .automatic
     
     var body: some View {
-        ZStack(alignment: .top) {
-            Map(position: $position) {
-                UserAnnotation()
-            }
-            .mapStyle(.standard)
-            .mapControls {
-                MapUserLocationButton()
-                MapCompass()
-                MapScaleView()
-            }
-            .onAppear {
-                position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
-                    center: locationManager.region.center,
-                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                )))
-            }
-            .mask {
+        ZStack {
+            Color(uiColor: .systemBackground)
+                .ignoresSafeArea()
+            
+            ZStack {
+                Map(position: $position) {
+                    if let location = locationManager.userLocation {
+                        Annotation("", coordinate: location) {
+                            CustomUserAnnotation()
+                        }
+                    }
+                }
+                .mapStyle(.standard)
+                .mapControls {
+                    MapUserLocationButton()
+                    MapCompass()
+                    MapScaleView()
+                }
+                .allowsHitTesting(false)
+                .onChange(of: locationManager.userLocation) { oldLocation, newLocation in
+                    if let location = newLocation {
+                        position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
+                            center: location,
+                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                        )))
+                    }
+                }
+                .onAppear {
+                    if let location = locationManager.userLocation {
+                        position = .userLocation(followsHeading: true, fallback: .region(MKCoordinateRegion(
+                            center: location,
+                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                        )))
+                    }
+                }
+                .mask {
+                    Image("maskshape")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                }
+                
                 Image("maskshape")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: UIScreen.main.bounds.width - 48)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .opacity(0.01)
             }
-            .ignoresSafeArea()
-            
-            Image("maskshape")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: UIScreen.main.bounds.width - 48)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .opacity(0.01)
+            .frame(width: UIScreen.main.bounds.width - 96)
         }
     }
 }
