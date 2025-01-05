@@ -103,6 +103,12 @@ struct MapTile: View {
     @State private var position: MapCameraPosition = .automatic
     @State private var flip = false
     @State private var rotationAngle = 0.0
+    @State private var scale = 1.0
+    @State private var pressedUsername = false
+    @State private var pressedLocation = false
+    @State private var pressedQR = false
+    @State private var showQR = false
+    let haptic = UIImpactFeedbackGenerator(style: .medium)
     
     var body: some View {
         ZStack {
@@ -112,11 +118,11 @@ struct MapTile: View {
             // Content container
             ZStack {
                 // Profile side
-                Image("profilepic")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .opacity(rotationAngle < 90 ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.2), value: rotationAngle)
+                Image(showQR ? "qr" : "profilepic")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .opacity(rotationAngle < 90 ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.2), value: rotationAngle)
                 
                 // Map side
                 ZStack {
@@ -161,6 +167,7 @@ struct MapTile: View {
                         .aspectRatio(contentMode: .fit)
                         .opacity(0.01)
                 }
+                .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
                 .opacity(rotationAngle >= 90 ? 1 : 0)
                 .animation(.easeInOut(duration: 0.2), value: rotationAngle)
             }
@@ -170,6 +177,7 @@ struct MapTile: View {
                 .degrees(rotationAngle),
                 axis: (x: 0, y: 1, z: 0)
             )
+            .scaleEffect(scale)
             
             // Bottom pills in fixed position
             HStack {
@@ -180,6 +188,41 @@ struct MapTile: View {
                 .padding(10)
                 .background(Color.primary.opacity(0.05))
                 .cornerRadius(100)
+                .scaleEffect(pressedUsername ? 0.875 : 1)
+                .onTapGesture {
+                    haptic.impactOccurred()
+                    withAnimation(.spring(duration: 0.3)) {
+                        pressedUsername = true
+                        showQR = false
+                    }
+                    
+                    // Scale down container
+                    withAnimation(.spring(duration: 0.18)) {
+                        scale = 0.8
+                    }
+                    
+                    // Show profile
+                    if rotationAngle != 0 {
+                        showQR = false
+                        // Flip to profile
+                        withAnimation(.spring(duration: 0.5)) {
+                            rotationAngle = 0
+                        }
+                    }
+                    
+                    // Scale back up
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.spring(duration: 0.25)) {
+                            scale = 1.0
+                        }
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation(.spring(duration: 0.3)) {
+                            pressedUsername = false
+                        }
+                    }
+                }
                 
                 HStack(spacing: 4) {
                     Image(systemName: "location.fill")
@@ -191,10 +234,37 @@ struct MapTile: View {
                 .padding(10)
                 .background(Color.primary.opacity(0.05))
                 .cornerRadius(100)
+                .scaleEffect(pressedLocation ? 0.875 : 1)
                 .onTapGesture {
-                    withAnimation(.spring(duration: 0.5)) {
-                        rotationAngle = flip ? 0 : 180
-                        flip.toggle()
+                    haptic.impactOccurred()
+                    withAnimation(.spring(duration: 0.3)) {
+                        pressedLocation = true
+                    }
+                    
+                    // Scale down container
+                    withAnimation(.spring(duration: 0.18)) {
+                        scale = 0.8
+                    }
+                    
+                    // Show map
+                    if rotationAngle != 180 {
+                        // Flip to map
+                        withAnimation(.spring(duration: 0.5)) {
+                            rotationAngle = 180
+                        }
+                    }
+                    
+                    // Scale back up
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.spring(duration: 0.25)) {
+                            scale = 1.0
+                        }
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation(.spring(duration: 0.3)) {
+                            pressedLocation = false
+                        }
                     }
                 }
                 
@@ -204,6 +274,40 @@ struct MapTile: View {
                 .padding(10)
                 .background(Color.primary.opacity(0.05))
                 .cornerRadius(100)
+                .scaleEffect(pressedQR ? 0.875 : 1)
+                .onTapGesture {
+                    haptic.impactOccurred()
+                    withAnimation(.spring(duration: 0.3)) {
+                        pressedQR = true
+                        showQR = true
+                    }
+                    
+                    // Scale down container
+                    withAnimation(.spring(duration: 0.18)) {
+                        scale = 0.8
+                    }
+                    
+                    // Show QR code
+                    if rotationAngle != 0 {
+                        // Flip to profile side
+                        withAnimation(.spring(duration: 0.5)) {
+                            rotationAngle = 0
+                        }
+                    }
+                    
+                    // Scale back up
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.spring(duration: 0.25)) {
+                            scale = 1.0
+                        }
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation(.spring(duration: 0.3)) {
+                            pressedQR = false
+                        }
+                    }
+                }
             }
             .offset(y: 300)
         }
