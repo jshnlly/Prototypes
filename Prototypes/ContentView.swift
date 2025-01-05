@@ -115,7 +115,7 @@ struct ContentView: View {
                             .enableSwipeBack()
                     }
                     
-                    NavigationLink("Map Tile") {
+                    NavigationLink("Dynamic Profile Pic") {
                         MapTile()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .toolbar {

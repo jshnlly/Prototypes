@@ -20,7 +20,7 @@
 		26DC59882CED727200851CBF /* IDCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DC59872CED727200851CBF /* IDCard.swift */; };
 		26E074E62D0DED84000025B2 /* FamilyTray.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E074E52D0DED84000025B2 /* FamilyTray.swift */; };
 		26E6E7392CF8DBC90081B66E /* MeshPractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E6E7382CF8DBC90081B66E /* MeshPractice.swift */; };
-		D13DD1862D2881F3000BBDF0 /* MapTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13DD1852D2881F3000BBDF0 /* MapTile.swift */; };
+		D13DD1862D2881F3000BBDF0 /* DynamicProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13DD1852D2881F3000BBDF0 /* DynamicProfilePic.swift */; };
 		D13DD1882D28834E000BBDF0 /* DynamicToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13DD1872D28834E000BBDF0 /* DynamicToast.swift */; };
 /* End PBXBuildFile section */
 
@@ -39,7 +39,7 @@
 		26DC59872CED727200851CBF /* IDCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IDCard.swift; sourceTree = "<group>"; };
 		26E074E52D0DED84000025B2 /* FamilyTray.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyTray.swift; sourceTree = "<group>"; };
 		26E6E7382CF8DBC90081B66E /* MeshPractice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshPractice.swift; sourceTree = "<group>"; };
-		D13DD1852D2881F3000BBDF0 /* MapTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapTile.swift; sourceTree = "<group>"; };
+		D13DD1852D2881F3000BBDF0 /* DynamicProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicProfilePic.swift; sourceTree = "<group>"; };
 		D13DD1872D28834E000BBDF0 /* DynamicToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicToast.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -84,7 +84,7 @@
 				2696720F2D1702FE00E6C893 /* ComposerSwipe.swift */,
 				2696720D2D13B2B900E6C893 /* ConfettiEffect.swift */,
 				269672112D1F3FEE00E6C893 /* SignSheet.swift */,
-				D13DD1852D2881F3000BBDF0 /* MapTile.swift */,
+				D13DD1852D2881F3000BBDF0 /* DynamicProfilePic.swift */,
 				D13DD1872D28834E000BBDF0 /* DynamicToast.swift */,
 				26DC597D2CED725C00851CBF /* Assets.xcassets */,
 				26DC597F2CED725C00851CBF /* Preview Content */,
@@ -170,7 +170,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D13DD1862D2881F3000BBDF0 /* MapTile.swift in Sources */,
+				D13DD1862D2881F3000BBDF0 /* DynamicProfilePic.swift in Sources */,
 				263802CF2D0002350011D3AC /* ThingsListCell.swift in Sources */,
 				26DC597C2CED725B00851CBF /* ContentView.swift in Sources */,
 				263803002D091E340011D3AC /* Counter.swift in Sources */,
