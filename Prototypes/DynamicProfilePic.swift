@@ -118,11 +118,16 @@ struct MapTile: View {
             // Content container
             ZStack {
                 // Profile side
-                Image(showQR ? "qr" : "profilepic")
+                
+                QRDesignView()
+                    .opacity(showQR ? 1 : 0)
+                
+                Image("profilepic")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .opacity(rotationAngle < 90 ? 1 : 0)
                         .animation(.easeInOut(duration: 0.2), value: rotationAngle)
+                        .scaleEffect(showQR ? 0.25 : 1)
                 
                 // Map side
                 ZStack {
@@ -178,8 +183,6 @@ struct MapTile: View {
                 axis: (x: 0, y: 1, z: 0)
             )
             .scaleEffect(scale)
-            
-            QRDesignView()
             
             // Bottom pills in fixed position
             HStack {
@@ -241,6 +244,7 @@ struct MapTile: View {
                     haptic.impactOccurred()
                     withAnimation(.spring(duration: 0.3)) {
                         pressedLocation = true
+                        showQR = false
                     }
                     
                     // Scale down container
@@ -323,7 +327,7 @@ struct QRDesignView: View {
     var body: some View {
         ZStack {
             // White rectangle with shadow
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: 48, style: .continuous)
                 .fill(.white)
                 .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 4)
             
@@ -397,12 +401,6 @@ struct QRDesignView: View {
                     )
                     .position(x: padding + 25, y: containerSize - padding - 10)
             }
-            
-            // Center logo placeholder
-            Image("profilepic")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 60, height: 60)
         }
         .frame(width: containerSize, height: containerSize)
     }
@@ -420,6 +418,13 @@ struct QRDesignView: View {
         
         // Bottom-left position marker
         if row >= 18 && col < 7 {
+            return true
+        }
+        
+        // Center area for profile picture (larger area)
+        let centerStart = 8
+        let centerEnd = 16
+        if row >= centerStart && row <= centerEnd && col >= centerStart && col <= centerEnd {
             return true
         }
         
