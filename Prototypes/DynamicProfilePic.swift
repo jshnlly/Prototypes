@@ -179,6 +179,8 @@ struct MapTile: View {
             )
             .scaleEffect(scale)
             
+            QRDesignView()
+            
             // Bottom pills in fixed position
             HStack {
                 HStack {
@@ -311,6 +313,117 @@ struct MapTile: View {
             }
             .offset(y: 300)
         }
+    }
+}
+
+struct QRDesignView: View {
+    let containerSize: CGFloat = 280
+    let padding: CGFloat = 24
+    
+    var body: some View {
+        ZStack {
+            // White rectangle with shadow
+            RoundedRectangle(cornerRadius: 24)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 4)
+            
+            // Base grid of dots
+            VStack(spacing: 4) {
+                ForEach(0..<25) { row in
+                    HStack(spacing: 4) {
+                        ForEach(0..<25) { col in
+                            if isInPositionMarkerArea(row: row, col: col) {
+                                Color.clear
+                                    .frame(width: 6, height: 6)
+                            } else {
+                                Circle()
+                                    .fill(.black)
+                                    .frame(width: 6, height: 6)
+                                    .opacity(Bool.random() ? 1 : 0)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(padding)
+            
+            // Position Markers
+            ZStack {
+                // Top-left
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.black)
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(.white)
+                            .frame(width: 34, height: 34)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(.black)
+                            .frame(width: 18, height: 18)
+                    )
+                    .position(x: padding + 25, y: padding + 25)
+                
+                // Top-right
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.black)
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(.white)
+                            .frame(width: 34, height: 34)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(.black)
+                            .frame(width: 18, height: 18)
+                    )
+                    .position(x: containerSize - padding - 10, y: padding + 25)
+                
+                // Bottom-left
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.black)
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(.white)
+                            .frame(width: 34, height: 34)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(.black)
+                            .frame(width: 18, height: 18)
+                    )
+                    .position(x: padding + 25, y: containerSize - padding - 10)
+            }
+            
+            // Center logo placeholder
+            Image("profilepic")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 60, height: 60)
+        }
+        .frame(width: containerSize, height: containerSize)
+    }
+    
+    private func isInPositionMarkerArea(row: Int, col: Int) -> Bool {
+        // Top-left position marker
+        if row < 7 && col < 7 {
+            return true
+        }
+        
+        // Top-right position marker
+        if row < 7 && col >= 18 {
+            return true
+        }
+        
+        // Bottom-left position marker
+        if row >= 18 && col < 7 {
+            return true
+        }
+        
+        return false
     }
 }
 
