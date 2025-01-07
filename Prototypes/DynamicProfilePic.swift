@@ -128,7 +128,7 @@ struct MapTile: View {
                         .opacity(rotationAngle < 90 ? 1 : 0)
                         .animation(.easeInOut(duration: 0.2), value: rotationAngle)
                         .clipShape(RoundedRectangle(cornerRadius: showQR ? 72 : 200, style: .continuous))
-                        .scaleEffect(showQR ? 0.25 : 1)
+                        .scaleEffect(showQR ? 0.22 : 1)
                 
                 // Map side
                 ZStack {
