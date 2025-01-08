@@ -353,6 +353,14 @@ struct QRDesignView: View {
     let containerSize: CGFloat = 280
     let padding: CGFloat = 24
     @StateObject private var motionManager = MotionManager()
+    @State private var dotPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 25), count: 25)
+    
+    init() {
+        // Generate random dot pattern once
+        _dotPattern = State(initialValue: (0..<25).map { _ in
+            (0..<25).map { _ in Bool.random() }
+        })
+    }
     
     var body: some View {
         ZStack {
@@ -375,7 +383,7 @@ struct QRDesignView: View {
                                 Circle()
                                     .fill(.black)
                                     .frame(width: 6, height: 6)
-                                    .opacity(Bool.random() ? 1 : 0)
+                                    .opacity(dotPattern[row][col] ? 1 : 0)
                             }
                         }
                     }
