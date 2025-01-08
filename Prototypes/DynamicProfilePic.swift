@@ -8,6 +8,7 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import CoreMotion
 
 extension CLLocationCoordinate2D: Equatable {
     public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
@@ -85,6 +86,33 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         objectWillChange.send()
+    }
+}
+
+class MotionManager: ObservableObject {
+    private let motionManager = CMMotionManager()
+    @Published var roll: Double = 0.0
+    @Published var pitch: Double = 0.0
+    private var initialPitch: Double?
+    
+    init() {
+        motionManager.deviceMotionUpdateInterval = 1/60
+        motionManager.startDeviceMotionUpdates(to: .main) { [weak self] motion, error in
+            guard let motion = motion else { return }
+            self?.roll = motion.attitude.roll
+            
+            if self?.initialPitch == nil {
+                self?.initialPitch = motion.attitude.pitch
+            }
+            
+            if let initialPitch = self?.initialPitch {
+                self?.pitch = motion.attitude.pitch - initialPitch
+            }
+        }
+    }
+    
+    deinit {
+        motionManager.stopDeviceMotionUpdates()
     }
 }
 
@@ -324,6 +352,7 @@ struct MapTile: View {
 struct QRDesignView: View {
     let containerSize: CGFloat = 280
     let padding: CGFloat = 24
+    @StateObject private var motionManager = MotionManager()
     
     var body: some View {
         ZStack {
@@ -331,6 +360,8 @@ struct QRDesignView: View {
             RoundedRectangle(cornerRadius: 48, style: .continuous)
                 .fill(.white)
                 .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 4)
+                .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
+                .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
             
             // Base grid of dots
             VStack(spacing: 4) {
@@ -351,6 +382,8 @@ struct QRDesignView: View {
                 }
             }
             .padding(padding)
+            .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
+            .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
             
             // Position Markers
             ZStack {
@@ -384,7 +417,7 @@ struct QRDesignView: View {
                             .fill(.black)
                             .frame(width: 18, height: 18)
                     )
-                    .position(x: containerSize - padding - 10, y: padding + 25)
+                    .position(x: containerSize - padding - 25, y: padding + 25)
                 
                 // Bottom-left
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -400,8 +433,10 @@ struct QRDesignView: View {
                             .fill(.black)
                             .frame(width: 18, height: 18)
                     )
-                    .position(x: padding + 25, y: containerSize - padding - 10)
+                    .position(x: padding + 25, y: containerSize - padding - 25)
             }
+            .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
+            .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
         }
         .frame(width: containerSize, height: containerSize)
     }
