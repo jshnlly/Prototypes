@@ -353,12 +353,12 @@ struct QRDesignView: View {
     let containerSize: CGFloat = 280
     let padding: CGFloat = 24
     @StateObject private var motionManager = MotionManager()
-    @State private var dotPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 25), count: 25)
+    @State private var dotPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 35), count: 35)
     
     init() {
         // Generate random dot pattern once
-        _dotPattern = State(initialValue: (0..<25).map { _ in
-            (0..<25).map { _ in Bool.random() }
+        _dotPattern = State(initialValue: (0..<35).map { _ in
+            (0..<35).map { _ in Bool.random() }
         })
     }
     
@@ -372,17 +372,17 @@ struct QRDesignView: View {
                 .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
             
             // Base grid of dots
-            VStack(spacing: 4) {
-                ForEach(0..<25) { row in
-                    HStack(spacing: 4) {
-                        ForEach(0..<25) { col in
+            VStack(spacing: 3) {
+                ForEach(0..<35) { row in
+                    HStack(spacing: 3) {
+                        ForEach(0..<35) { col in
                             if isInPositionMarkerArea(row: row, col: col) {
                                 Color.clear
-                                    .frame(width: 6, height: 6)
+                                    .frame(width: 4, height: 4)
                             } else {
                                 Circle()
                                     .fill(.black)
-                                    .frame(width: 6, height: 6)
+                                    .frame(width: 4, height: 4)
                                     .opacity(dotPattern[row][col] ? 1 : 0)
                             }
                         }
@@ -425,7 +425,7 @@ struct QRDesignView: View {
                             .fill(.black)
                             .frame(width: 18, height: 18)
                     )
-                    .position(x: containerSize - padding - 25, y: padding + 25)
+                    .position(x: containerSize - padding - 18, y: padding + 25)
                 
                 // Bottom-left
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -441,7 +441,7 @@ struct QRDesignView: View {
                             .fill(.black)
                             .frame(width: 18, height: 18)
                     )
-                    .position(x: padding + 25, y: containerSize - padding - 25)
+                    .position(x: padding + 25, y: containerSize - padding - 18)
             }
             .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
             .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
@@ -451,23 +451,23 @@ struct QRDesignView: View {
     
     private func isInPositionMarkerArea(row: Int, col: Int) -> Bool {
         // Top-left position marker
-        if row < 7 && col < 7 {
+        if row < 10 && col < 10 {
             return true
         }
         
         // Top-right position marker
-        if row < 7 && col >= 18 {
+        if row < 10 && col >= 25 {
             return true
         }
         
         // Bottom-left position marker
-        if row >= 18 && col < 7 {
+        if row >= 25 && col < 10 {
             return true
         }
         
         // Center area for profile picture (larger area)
-        let centerStart = 8
-        let centerEnd = 16
+        let centerStart = 12
+        let centerEnd = 22
         if row >= centerStart && row <= centerEnd && col >= centerStart && col <= centerEnd {
             return true
         }
