@@ -354,6 +354,7 @@ struct QRDesignView: View {
     let padding: CGFloat = 24
     @StateObject private var motionManager = MotionManager()
     @State private var dotPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 35), count: 35)
+    @State private var rotation: Double = 0
     
     init() {
         // Generate random dot pattern once
@@ -371,82 +372,88 @@ struct QRDesignView: View {
                 .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
                 .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
             
-            // Base grid of dots
-            VStack(spacing: 3) {
-                ForEach(0..<35) { row in
-                    HStack(spacing: 3) {
-                        ForEach(0..<35) { col in
-                            if isInPositionMarkerArea(row: row, col: col) {
-                                Color.clear
-                                    .frame(width: 4, height: 4)
-                            } else {
-                                Circle()
-                                    .fill(.black)
-                                    .frame(width: 4, height: 4)
-                                    .opacity(dotPattern[row][col] ? 1 : 0)
+            // Gradient background for dots
+            AngularGradient(
+                colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
+                center: .center,
+                startAngle: .degrees(rotation),
+                endAngle: .degrees(360 + rotation)
+            )
+            .mask {
+                // Base grid of dots
+                VStack(spacing: 3) {
+                    ForEach(0..<35) { row in
+                        HStack(spacing: 3) {
+                            ForEach(0..<35) { col in
+                                if isInPositionMarkerArea(row: row, col: col) {
+                                    Color.clear
+                                        .frame(width: 4, height: 4)
+                                } else {
+                                    Circle()
+                                        .frame(width: 4, height: 4)
+                                        .opacity(dotPattern[row][col] ? 1 : 0)
+                                }
                             }
                         }
                     }
                 }
+                .padding(padding)
             }
-            .padding(padding)
+            .blur(radius: 20)
+            .overlay(
+                AngularGradient(
+                    colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
+                    center: .center,
+                    startAngle: .degrees(rotation),
+                    endAngle: .degrees(360 + rotation)
+                )
+                .mask {
+                    // Base grid of dots
+                    VStack(spacing: 3) {
+                        ForEach(0..<35) { row in
+                            HStack(spacing: 3) {
+                                ForEach(0..<35) { col in
+                                    if isInPositionMarkerArea(row: row, col: col) {
+                                        Color.clear
+                                            .frame(width: 4, height: 4)
+                                    } else {
+                                        Circle()
+                                            .frame(width: 4, height: 4)
+                                            .opacity(dotPattern[row][col] ? 1 : 0)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(padding)
+                }
+            )
             .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
             .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
             
             // Position Markers
             ZStack {
                 // Top-left
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.black)
-                    .frame(width: 50, height: 50)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(.white)
-                            .frame(width: 34, height: 34)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(.black)
-                            .frame(width: 18, height: 18)
-                    )
+                PositionMarker(rotation: rotation)
                     .position(x: padding + 25, y: padding + 25)
                 
                 // Top-right
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.black)
-                    .frame(width: 50, height: 50)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(.white)
-                            .frame(width: 34, height: 34)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(.black)
-                            .frame(width: 18, height: 18)
-                    )
-                    .position(x: containerSize - padding - 18, y: padding + 25)
+                PositionMarker(rotation: rotation)
+                    .position(x: containerSize - padding - 25, y: padding + 25)
                 
                 // Bottom-left
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.black)
-                    .frame(width: 50, height: 50)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(.white)
-                            .frame(width: 34, height: 34)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(.black)
-                            .frame(width: 18, height: 18)
-                    )
-                    .position(x: padding + 25, y: containerSize - padding - 18)
+                PositionMarker(rotation: rotation)
+                    .position(x: padding + 25, y: containerSize - padding - 25)
             }
             .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
             .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
         }
         .frame(width: containerSize, height: containerSize)
+        .onAppear {
+            withAnimation(.linear(duration: 10).repeatForever(autoreverses: false)) {
+                rotation = 360
+            }
+        }
     }
     
     private func isInPositionMarkerArea(row: Int, col: Int) -> Bool {
@@ -473,6 +480,61 @@ struct QRDesignView: View {
         }
         
         return false
+    }
+}
+
+struct PositionMarker: View {
+    var rotation: Double
+    
+    var body: some View {
+        ZStack {
+            // Outer square
+            AngularGradient(
+                colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
+                center: .center,
+                startAngle: .degrees(rotation),
+                endAngle: .degrees(360 + rotation)
+            )
+            .blur(radius: 20)
+            .overlay(
+                AngularGradient(
+                    colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
+                    center: .center,
+                    startAngle: .degrees(rotation),
+                    endAngle: .degrees(360 + rotation)
+                )
+            )
+            .mask(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .frame(width: 50, height: 50)
+            )
+            
+            // Inner white square
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(.white)
+                .frame(width: 34, height: 34)
+            
+            // Center square
+            AngularGradient(
+                colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
+                center: .center,
+                startAngle: .degrees(rotation),
+                endAngle: .degrees(360 + rotation)
+            )
+            .blur(radius: 20)
+            .overlay(
+                AngularGradient(
+                    colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
+                    center: .center,
+                    startAngle: .degrees(rotation),
+                    endAngle: .degrees(360 + rotation)
+                )
+            )
+            .mask(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .frame(width: 18, height: 18)
+            )
+        }
     }
 }
 
