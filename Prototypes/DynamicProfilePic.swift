@@ -128,6 +128,7 @@ struct CustomUserAnnotation: View {
 
 struct MapTile: View {
     @StateObject private var locationManager = LocationManager()
+    @StateObject private var motionManager = MotionManager()
     @State private var position: MapCameraPosition = .automatic
     @State private var flip = false
     @State private var rotationAngle = 0.0
@@ -136,6 +137,8 @@ struct MapTile: View {
     @State private var pressedLocation = false
     @State private var pressedQR = false
     @State private var showQR = false
+    @State private var showToast = false
+    @State private var toastOffset: CGFloat = 0
     let haptic = UIImpactFeedbackGenerator(style: .medium)
     
     var body: some View {
@@ -145,18 +148,80 @@ struct MapTile: View {
             
             // Content container
             ZStack {
-                // Profile side
+                // Toast notification
+                if showToast {
+                    HStack(spacing: 4) {
+                        Text("Copied link")
+                            .font(.footnote)
+                            .fontWeight(.medium)
+                        Image(systemName: "checkmark")
+                            .font(.footnote)
+                    }
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background {
+                        Capsule()
+                            .fill(.background)
+                            .shadow(color: .primary.opacity(0.1), radius: 8, x: 0, y: 4)
+                    }
+                    .offset(y: -140 + toastOffset)
+                    .opacity(toastOffset == 0 ? 0 : 1)
+                    .zIndex(1)
+                }
                 
-                QRDesignView()
+                // Profile side
+                QRDesignView(motionManager: motionManager)
                     .opacity(showQR ? 1 : 0)
+                    .scaleEffect(scale)
+                    .zIndex(2)
+                    .onTapGesture {
+                        haptic.impactOccurred()
+                        
+                        // Scale down container
+                        withAnimation(.spring(duration: 0.18)) {
+                            scale = 0.8
+                        }
+                        
+                        // Show toast
+                        showToast = true
+                        toastOffset = 0 // Start behind QR
+                        
+                        // Animate toast up with opacity
+                        withAnimation(.spring(duration: 0.5)) {
+                            toastOffset = -24
+                        }
+                        
+                        // Scale back up
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.spring(duration: 0.25)) {
+                                scale = 1.0
+                            }
+                        }
+                        
+                        // Hide toast after delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            withAnimation(.spring(duration: 0.5)) {
+                                toastOffset = 0
+                            }
+                            
+                            // Remove toast view after animation completes
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                showToast = false
+                            }
+                        }
+                    }
                 
                 Image("profilepic")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .opacity(rotationAngle < 90 ? 1 : 0)
-                        .animation(.easeInOut(duration: 0.2), value: rotationAngle)
-                        .clipShape(RoundedRectangle(cornerRadius: showQR ? 72 : 200, style: .continuous))
-                        .scaleEffect(showQR ? 0.22 : 1)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .opacity(rotationAngle < 90 ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.2), value: rotationAngle)
+                    .clipShape(RoundedRectangle(cornerRadius: showQR ? 72 : 200, style: .continuous))
+                    .scaleEffect(showQR ? 0.22 : 1)
+                    .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
+                    .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
+                    .zIndex(3)
                 
                 // Map side
                 ZStack {
@@ -212,6 +277,21 @@ struct MapTile: View {
                 axis: (x: 0, y: 1, z: 0)
             )
             .scaleEffect(scale)
+            .onTapGesture {
+                haptic.impactOccurred()
+                
+                // Scale down container
+                withAnimation(.spring(duration: 0.18)) {
+                    scale = 0.8
+                }
+                
+                // Scale back up
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    withAnimation(.spring(duration: 0.25)) {
+                        scale = 1.0
+                    }
+                }
+            }
             
             // Bottom pills in fixed position
             HStack {
@@ -352,11 +432,19 @@ struct MapTile: View {
 struct QRDesignView: View {
     let containerSize: CGFloat = 280
     let padding: CGFloat = 24
-    @StateObject private var motionManager = MotionManager()
+    @ObservedObject var motionManager: MotionManager
     @State private var dotPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 35), count: 35)
     @State private var rotation: Double = 0
     
-    init() {
+    var shimmerOffset: CGSize {
+        CGSize(
+            width: motionManager.roll * 10,
+            height: motionManager.pitch * 10
+        )
+    }
+    
+    init(motionManager: MotionManager) {
+        self.motionManager = motionManager
         // Generate random dot pattern once
         _dotPattern = State(initialValue: (0..<35).map { _ in
             (0..<35).map { _ in Bool.random() }
@@ -372,13 +460,29 @@ struct QRDesignView: View {
                 .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
                 .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
             
-            // Gradient background for dots
-            AngularGradient(
-                colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
-                center: .center,
-                startAngle: .degrees(rotation),
-                endAngle: .degrees(360 + rotation)
-            )
+            // Base gradient with shimmer for dots
+            ZStack {
+                // Base gradient
+                AngularGradient(
+                    colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
+                    center: .center,
+                    startAngle: .degrees(rotation),
+                    endAngle: .degrees(360 + rotation)
+                )
+                
+                // Shimmer overlay
+                LinearGradient(
+                    colors: [
+                        .white.opacity(0),
+                        .white.opacity(0.3),
+                        .white.opacity(0)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .offset(shimmerOffset)
+                .blur(radius: 5)
+            }
             .mask {
                 // Base grid of dots
                 VStack(spacing: 3) {
@@ -399,50 +503,21 @@ struct QRDesignView: View {
                 }
                 .padding(padding)
             }
-            .blur(radius: 20)
-            .overlay(
-                AngularGradient(
-                    colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
-                    center: .center,
-                    startAngle: .degrees(rotation),
-                    endAngle: .degrees(360 + rotation)
-                )
-                .mask {
-                    // Base grid of dots
-                    VStack(spacing: 3) {
-                        ForEach(0..<35) { row in
-                            HStack(spacing: 3) {
-                                ForEach(0..<35) { col in
-                                    if isInPositionMarkerArea(row: row, col: col) {
-                                        Color.clear
-                                            .frame(width: 4, height: 4)
-                                    } else {
-                                        Circle()
-                                            .frame(width: 4, height: 4)
-                                            .opacity(dotPattern[row][col] ? 1 : 0)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .padding(padding)
-                }
-            )
             .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
             .rotation3DEffect(.radians(-motionManager.pitch * 0.2), axis: (x: 1, y: 0, z: 0))
             
             // Position Markers
             ZStack {
                 // Top-left
-                PositionMarker(rotation: rotation)
+                PositionMarker(rotation: rotation, shimmerOffset: shimmerOffset)
                     .position(x: padding + 25, y: padding + 25)
                 
                 // Top-right
-                PositionMarker(rotation: rotation)
+                PositionMarker(rotation: rotation, shimmerOffset: shimmerOffset)
                     .position(x: containerSize - padding - 25, y: padding + 25)
                 
                 // Bottom-left
-                PositionMarker(rotation: rotation)
+                PositionMarker(rotation: rotation, shimmerOffset: shimmerOffset)
                     .position(x: padding + 25, y: containerSize - padding - 25)
             }
             .rotation3DEffect(.radians(motionManager.roll * 0.2), axis: (x: 0, y: 1, z: 0))
@@ -485,29 +560,14 @@ struct QRDesignView: View {
 
 struct PositionMarker: View {
     var rotation: Double
+    var shimmerOffset: CGSize
     
     var body: some View {
         ZStack {
             // Outer square
-            AngularGradient(
-                colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
-                center: .center,
-                startAngle: .degrees(rotation),
-                endAngle: .degrees(360 + rotation)
-            )
-            .blur(radius: 20)
-            .overlay(
-                AngularGradient(
-                    colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
-                    center: .center,
-                    startAngle: .degrees(rotation),
-                    endAngle: .degrees(360 + rotation)
-                )
-            )
-            .mask(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .frame(width: 50, height: 50)
-            )
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.purple)
+                .frame(width: 50, height: 50)
             
             // Inner white square
             RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -515,25 +575,9 @@ struct PositionMarker: View {
                 .frame(width: 34, height: 34)
             
             // Center square
-            AngularGradient(
-                colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
-                center: .center,
-                startAngle: .degrees(rotation),
-                endAngle: .degrees(360 + rotation)
-            )
-            .blur(radius: 20)
-            .overlay(
-                AngularGradient(
-                    colors: [.blue, .purple, .blue.opacity(0.8), .purple.opacity(0.8), .blue],
-                    center: .center,
-                    startAngle: .degrees(rotation),
-                    endAngle: .degrees(360 + rotation)
-                )
-            )
-            .mask(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .frame(width: 18, height: 18)
-            )
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.purple)
+                .frame(width: 18, height: 18)
         }
     }
 }
