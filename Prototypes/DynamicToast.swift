@@ -9,7 +9,18 @@ import SwiftUI
 
 struct DynamicToast: View {
     var body: some View {
-        Text("A dynamic toast that pops in, expands, and can be dismissed via a swipe or shake.")
+        VStack {
+            
+            ZStack {
+                Rectangle()
+                    .fill(Color.primary.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .frame(width: 140, height: 44)
+                
+                Text("Show toast")
+                    .fontWeight(.semibold)
+            }
+        }
     }
 }
 
